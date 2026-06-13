@@ -75,6 +75,13 @@ interface AppState {
   // Inbox
   inboxItems: InboxItem[]
 
+  // Editor appearance
+  editorMaxWidth: number       // px, 0 = unlimited
+  editorFontSize: number       // px
+  editorLineHeight: number     // multiplier
+  editorTextAlign: 'left' | 'justify'
+  setEditorAppearance: (s: Partial<Pick<AppState, 'editorMaxWidth' | 'editorFontSize' | 'editorLineHeight' | 'editorTextAlign'>>) => void
+
   // Save status
   saveStatus: 'idle' | 'saving' | 'saved'
   setSaveStatus: (s: 'idle' | 'saving' | 'saved') => void
@@ -88,6 +95,10 @@ interface AppState {
     dailyGoalWords?: number
     todayWordCount?: number
     activeChapterId?: string | null
+    editorMaxWidth?: number
+    editorFontSize?: number
+    editorLineHeight?: number
+    editorTextAlign?: 'left' | 'justify'
   }) => void
 
   // Actions — modes
@@ -203,6 +214,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   loreTypes: DEFAULT_LORE_TYPES,
   inboxItems: [],
 
+  editorMaxWidth: 800,
+  editorFontSize: 16,
+  editorLineHeight: 2,
+  editorTextAlign: 'left',
+  setEditorAppearance: (s) => set(s),
+
   saveStatus: 'idle',
   setSaveStatus: (s) => set({ saveStatus: s }),
 
@@ -220,6 +237,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       ...(data.loreTypes       ? { loreTypes: data.loreTypes } : {}),
       ...(data.dailyGoalWords  ? { dailyGoalWords: data.dailyGoalWords } : {}),
       ...(data.todayWordCount  ? { todayWordCount: data.todayWordCount } : {}),
+      ...(data.editorMaxWidth  !== undefined ? { editorMaxWidth: data.editorMaxWidth } : {}),
+      ...(data.editorFontSize  !== undefined ? { editorFontSize: data.editorFontSize } : {}),
+      ...(data.editorLineHeight !== undefined ? { editorLineHeight: data.editorLineHeight } : {}),
+      ...(data.editorTextAlign ? { editorTextAlign: data.editorTextAlign } : {}),
       activeChapterId: activeId,
       activeWordCount: activeId ? countWords(contents[activeId] ?? '') : 0,
       totalWordCount: Object.values(contents).reduce((s, t) => s + countWords(t), 0),

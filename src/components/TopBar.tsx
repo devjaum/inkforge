@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search } from 'lucide-react'
+import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown } from 'lucide-react'
 import { Progress } from './ui/progress'
 import { useAppStore } from '@/store/useAppStore'
+import { ExportImportModal } from './ExportImport'
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0')
@@ -22,8 +23,9 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
   } = useAppStore()
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const [showGoalInput, setShowGoalInput] = useState(false)
-  const [goalInput, setGoalInput] = useState(String(dailyGoalWords))
+  const [showGoalInput, setShowGoalInput]   = useState(false)
+  const [goalInput, setGoalInput]           = useState(String(dailyGoalWords))
+  const [showExportImport, setShowExportImport] = useState(false)
 
   useEffect(() => {
     if (isSprintActive) {
@@ -45,6 +47,7 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
   const goalReached = todayWordCount >= dailyGoalWords
 
   return (
+    <>
     <header
       className="drag-region h-12 flex items-center border-b border-zinc-800 bg-zinc-950 shrink-0"
       style={{ paddingLeft: '1rem', paddingRight: '146px' }}
@@ -157,6 +160,15 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
         <span className="text-[10px] text-zinc-600 w-7 tabular-nums">{Math.round(xpProgress)}%</span>
       </div>
 
+      {/* Export / Import */}
+      <button
+        onClick={() => setShowExportImport(true)}
+        className="no-drag p-1.5 rounded-lg text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 transition-colors"
+        title="Exportar / Importar backup"
+      >
+        <FolderDown size={13} />
+      </button>
+
       {/* Silent mode */}
       <button
         onClick={() => setSilentMode(!silentMode)}
@@ -171,5 +183,8 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
         <Inbox size={13} />
       </div>
     </header>
+
+    {showExportImport && <ExportImportModal onClose={() => setShowExportImport(false)} />}
+  </>
   )
 }

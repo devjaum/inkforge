@@ -3,7 +3,6 @@ import { useAppStore } from '@/store/useAppStore'
 
 const SAVE_DEBOUNCE = 1500
 
-// ── helpers ───────────────────────────────────────────────────────────────────
 async function readJson(file: string): Promise<unknown> {
   try { return await window.electronAPI?.readJson(file) ?? null } catch { return null }
 }
@@ -12,18 +11,27 @@ async function writeJson(file: string, data: unknown): Promise<void> {
   try { await window.electronAPI?.writeJson(file, data) } catch { /* browser preview */ }
 }
 
-// ── hook ──────────────────────────────────────────────────────────────────────
 export function usePersistence() {
   const {
-    chapters, chapterContents, loreEntities, loreTypes, dailyGoalWords, todayWordCount,
+    chapters, chapterContents, loreEntities, loreTypes,
+    dailyGoalWords, todayWordCount,
+    editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
     hydrate, setSaveStatus,
   } = useAppStore()
 
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
-  const latestRef = useRef({ chapters, chapterContents, loreEntities, loreTypes, dailyGoalWords, todayWordCount })
-  latestRef.current = { chapters, chapterContents, loreEntities, loreTypes, dailyGoalWords, todayWordCount }
+  const latestRef = useRef({
+    chapters, chapterContents, loreEntities, loreTypes,
+    dailyGoalWords, todayWordCount,
+    editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
+  })
+  latestRef.current = {
+    chapters, chapterContents, loreEntities, loreTypes,
+    dailyGoalWords, todayWordCount,
+    editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
+  }
 
-  // ── Load on mount ──────────────────────────────────────────────────────────
+  // ── Load on mount ────────────────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       const [contentRaw, chaptersRaw, loreRaw, progressRaw] = await Promise.all([
@@ -33,38 +41,43 @@ export function usePersistence() {
         readJson('progress.json'),
       ])
 
-      const content   = contentRaw   as { chapterContents?: Record<string, string> } | null
-      const chaps     = chaptersRaw  as { chapters?: unknown[] } | null
-      const lore      = loreRaw      as { loreEntities?: unknown[]; loreTypes?: unknown[] } | null
-      const progress  = progressRaw  as { dailyGoalWords?: number; todayWordCount?: number; activeChapterId?: string } | null
+      const content  = contentRaw  as { chapterContents?: Record<string, string> } | null
+      const chaps    = chaptersRaw as { chapters?: unknown[] } | null
+      const lore     = loreRaw     as { loreEntities?: unknown[]; loreTypes?: unknown[] } | null
+      const progress = progressRaw as {
+        dailyGoalWords?: number; todayWordCount?: number; activeChapterId?: string
+        editorMaxWidth?: number; editorFontSize?: number; editorLineHeight?: number; editorTextAlign?: 'left' | 'justify'
+      } | null
 
-      // Only hydrate if we actually have saved data
-      const hasData = content || chaps || lore || progress
-      if (!hasData) return
+      if (!content && !chaps && !lore && !progress) return
 
       hydrate({
-        chapterContents: content?.chapterContents,
-        chapters:        Array.isArray(chaps?.chapters) ? (chaps!.chapters as Parameters<typeof hydrate>[0]['chapters']) : undefined,
-        loreEntities:    Array.isArray(lore?.loreEntities) ? (lore!.loreEntities as Parameters<typeof hydrate>[0]['loreEntities']) : undefined,
-        loreTypes:       Array.isArray(lore?.loreTypes) ? (lore!.loreTypes as Parameters<typeof hydrate>[0]['loreTypes']) : undefined,
-        dailyGoalWords:  progress?.dailyGoalWords,
-        todayWordCount:  progress?.todayWordCount,
-        activeChapterId: progress?.activeChapterId,
+        chapterContents:  content?.chapterContents,
+        chapters:         Array.isArray(chaps?.chapters) ? (chaps!.chapters as Parameters<typeof hydrate>[0]['chapters']) : undefined,
+        loreEntities:     Array.isArray(lore?.loreEntities) ? (lore!.loreEntities as Parameters<typeof hydrate>[0]['loreEntities']) : undefined,
+        loreTypes:        Array.isArray(lore?.loreTypes) ? (lore!.loreTypes as Parameters<typeof hydrate>[0]['loreTypes']) : undefined,
+        dailyGoalWords:   progress?.dailyGoalWords,
+        todayWordCount:   progress?.todayWordCount,
+        activeChapterId:  progress?.activeChapterId,
+        editorMaxWidth:   progress?.editorMaxWidth,
+        editorFontSize:   progress?.editorFontSize,
+        editorLineHeight: progress?.editorLineHeight,
+        editorTextAlign:  progress?.editorTextAlign,
       })
     }
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ── Debounced save ─────────────────────────────────────────────────────────
-  function schedule(key: string, fn: () => Promise<void>, delay = SAVE_DEBOUNCE) {
+  // ── Debounced save ───────────────────────────────────────────────────────────
+  function schedule(key: string, fn: () => Promise<void>) {
     if (timers.current[key]) clearTimeout(timers.current[key])
     setSaveStatus('saving')
     timers.current[key] = setTimeout(async () => {
       await fn()
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
-    }, delay)
+    }, SAVE_DEBOUNCE)
   }
 
   useEffect(() => {
@@ -83,11 +96,14 @@ export function usePersistence() {
   }, [loreEntities, loreTypes])
 
   useEffect(() => {
-    schedule('progress', () => writeJson('progress.json', { dailyGoalWords, todayWordCount }))
+    schedule('progress', () => writeJson('progress.json', {
+      dailyGoalWords, todayWordCount,
+      editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
+    }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dailyGoalWords, todayWordCount])
+  }, [dailyGoalWords, todayWordCount, editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign])
 
-  // ── Ctrl+S — save all immediately ─────────────────────────────────────────
+  // ── Ctrl+S — save all immediately ───────────────────────────────────────────
   useEffect(() => {
     const handler = async (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey) || e.key !== 's') return
@@ -95,12 +111,16 @@ export function usePersistence() {
       Object.values(timers.current).forEach(clearTimeout)
       timers.current = {}
       setSaveStatus('saving')
-      const { chapters, chapterContents, loreEntities, loreTypes, dailyGoalWords, todayWordCount } = latestRef.current
+      const d = latestRef.current
       await Promise.all([
-        writeJson('content.json',  { chapterContents, savedAt: new Date().toISOString() }),
-        writeJson('chapters.json', { chapters }),
-        writeJson('lore.json',     { loreEntities, loreTypes }),
-        writeJson('progress.json', { dailyGoalWords, todayWordCount }),
+        writeJson('content.json',  { chapterContents: d.chapterContents, savedAt: new Date().toISOString() }),
+        writeJson('chapters.json', { chapters: d.chapters }),
+        writeJson('lore.json',     { loreEntities: d.loreEntities, loreTypes: d.loreTypes }),
+        writeJson('progress.json', {
+          dailyGoalWords: d.dailyGoalWords, todayWordCount: d.todayWordCount,
+          editorMaxWidth: d.editorMaxWidth, editorFontSize: d.editorFontSize,
+          editorLineHeight: d.editorLineHeight, editorTextAlign: d.editorTextAlign,
+        }),
       ])
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)

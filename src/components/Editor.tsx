@@ -1,28 +1,24 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, AlignLeft, AlignJustify, Minus, Settings2, ChevronDown } from 'lucide-react'
 import { useAppStore, type LoreEntity } from '@/store/useAppStore'
 
-// ── Markdown parser ─────────────────────────────────────────────────────────
-// Processes one line and returns a React element
+// ── Markdown parser ──────────────────────────────────────────────────────────
 function renderMarkdownLine(line: string, entities: LoreEntity[], lineKey: number): React.ReactNode {
   if (line.startsWith('### ')) return <h3 key={lineKey} className="text-lg font-bold text-zinc-100 mt-4 mb-1">{inlineRender(line.slice(4), entities, lineKey)}</h3>
   if (line.startsWith('## '))  return <h2 key={lineKey} className="text-xl font-bold text-zinc-100 mt-5 mb-1">{inlineRender(line.slice(3), entities, lineKey)}</h2>
   if (line.startsWith('# '))   return <h1 key={lineKey} className="text-2xl font-bold text-zinc-100 mt-6 mb-2">{inlineRender(line.slice(2), entities, lineKey)}</h1>
   if (line === '---' || line === '***') return <hr key={lineKey} className="border-zinc-700 my-4" />
   if (line === '') return <div key={lineKey} className="h-4" />
-  return <p key={lineKey} className="leading-8 text-zinc-200">{inlineRender(line, entities, lineKey)}</p>
+  return <p key={lineKey} className="leading-[inherit] text-zinc-200">{inlineRender(line, entities, lineKey)}</p>
 }
 
-// Inline markdown: **bold**, *italic*, `code`, lore @entities
 function inlineRender(text: string, entities: LoreEntity[], lineKey: number): React.ReactNode[] {
-  // Build lore pattern
   const sorted = [...entities].sort((a, b) => b.name.length - a.name.length)
   const entityMap = new Map(entities.map(e => [e.name, e]))
   const lorePattern = sorted.length > 0
     ? sorted.map(e => '@' + e.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
     : null
 
-  // Combined inline pattern: bold, italic, code, lore
   const base = '(\\*\\*[^*]+\\*\\*|\\*[^*]+\\*|`[^`]+`'
   const parts = lorePattern ? base + '|' + lorePattern + ')' : base + ')'
   const tokens = text.split(new RegExp(parts, 'g'))
@@ -50,13 +46,12 @@ function inlineRender(text: string, entities: LoreEntity[], lineKey: number): Re
   return nodes
 }
 
-// ── Lore hover chip ─────────────────────────────────────────────────────────
+// ── Lore hover chip ──────────────────────────────────────────────────────────
 function LoreChip({ entity }: { entity: LoreEntity }) {
   const { loreTypes } = useAppStore()
   const [open, setOpen] = useState(false)
   const typeInfo = loreTypes.find(t => t.value === entity.type)
   const typeLabel = typeInfo?.label ?? entity.type
-  // Extract just the text-* class from the color string for the label color
   const textClass = typeInfo?.color.split(' ').find(c => c.startsWith('text-')) ?? 'text-zinc-400'
 
   return (
@@ -80,7 +75,7 @@ function LoreChip({ entity }: { entity: LoreEntity }) {
   )
 }
 
-// ── Autocomplete popup ──────────────────────────────────────────────────────
+// ── Autocomplete popup ───────────────────────────────────────────────────────
 interface LorePopupProps {
   query: string
   entities: LoreEntity[]
@@ -115,14 +110,13 @@ function LorePopup({ query, entities, position, onSelect, onClose }: LorePopupPr
   )
 }
 
-// ── Rich text renderer ──────────────────────────────────────────────────────
+// ── Rich text renderer ───────────────────────────────────────────────────────
 function RichTextRenderer({ content, entities }: { content: string; entities: LoreEntity[] }) {
   const lines = content.split('\n')
   return <>{lines.map((line, i) => renderMarkdownLine(line, entities, i))}</>
 }
 
-
-// ── Zen mode overlay ────────────────────────────────────────────────────────
+// ── Zen mode overlay ─────────────────────────────────────────────────────────
 function ZenBar({ onExit }: { onExit: () => void }) {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-zinc-900/80 backdrop-blur border border-zinc-700 rounded-2xl px-4 py-2 shadow-xl opacity-0 hover:opacity-100 transition-opacity duration-300">
@@ -134,19 +128,114 @@ function ZenBar({ onExit }: { onExit: () => void }) {
   )
 }
 
-// ── Main editor ─────────────────────────────────────────────────────────────
+// ── Page settings panel ──────────────────────────────────────────────────────
+const WIDTH_PRESETS = [
+  { label: 'Estreito', value: 600 },
+  { label: 'Médio',    value: 800 },
+  { label: 'Largo',    value: 1100 },
+  { label: 'Cheio',    value: 1600 },
+  { label: 'Livre',    value: 0 },
+]
+const FONT_SIZES = [13, 15, 16, 18, 20, 24]
+const LINE_HEIGHTS = [
+  { label: '1.5×', value: 1.5 },
+  { label: '1.8×', value: 1.8 },
+  { label: '2×',   value: 2 },
+  { label: '2.5×', value: 2.5 },
+]
+
+function PageSettingsPanel({ onClose }: { onClose: () => void }) {
+  const { editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, setEditorAppearance } = useAppStore()
+
+  return (
+    <div className="absolute top-full right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-4 w-64" onClick={e => e.stopPropagation()}>
+      <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-3">Aparência da Página</div>
+
+      {/* Width */}
+      <div className="mb-3">
+        <div className="text-[10px] text-zinc-600 mb-1.5">Largura da página</div>
+        <div className="grid grid-cols-5 gap-1">
+          {WIDTH_PRESETS.map(p => (
+            <button key={p.value} onClick={() => setEditorAppearance({ editorMaxWidth: p.value })}
+              className={`text-[10px] py-1 rounded-md transition-colors ${editorMaxWidth === p.value ? 'bg-violet-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Font size */}
+      <div className="mb-3">
+        <div className="text-[10px] text-zinc-600 mb-1.5">Tamanho da fonte</div>
+        <div className="flex gap-1 flex-wrap">
+          {FONT_SIZES.map(s => (
+            <button key={s} onClick={() => setEditorAppearance({ editorFontSize: s })}
+              className={`text-[10px] px-2 py-1 rounded-md transition-colors ${editorFontSize === s ? 'bg-violet-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
+              {s}px
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Line height */}
+      <div className="mb-3">
+        <div className="text-[10px] text-zinc-600 mb-1.5">Espaçamento entre linhas</div>
+        <div className="flex gap-1">
+          {LINE_HEIGHTS.map(l => (
+            <button key={l.value} onClick={() => setEditorAppearance({ editorLineHeight: l.value })}
+              className={`flex-1 text-[10px] py-1 rounded-md transition-colors ${editorLineHeight === l.value ? 'bg-violet-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Alignment */}
+      <div>
+        <div className="text-[10px] text-zinc-600 mb-1.5">Alinhamento</div>
+        <div className="flex gap-1">
+          <button onClick={() => setEditorAppearance({ editorTextAlign: 'left' })}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[10px] transition-colors ${editorTextAlign === 'left' ? 'bg-violet-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
+            <AlignLeft size={11} /> Esquerda
+          </button>
+          <button onClick={() => setEditorAppearance({ editorTextAlign: 'justify' })}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-[10px] transition-colors ${editorTextAlign === 'justify' ? 'bg-violet-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
+            <AlignJustify size={11} /> Justificar
+          </button>
+        </div>
+      </div>
+
+      <button onClick={onClose} className="absolute top-2 right-2 text-zinc-600 hover:text-zinc-400"><X size={12} /></button>
+    </div>
+  )
+}
+
+// ── Main editor ──────────────────────────────────────────────────────────────
 export function Editor() {
   const {
     activeChapterId, chapterContents, loreEntities, chapters,
     isZenMode, toggleZenMode, setActiveChapterContent,
+    editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, setEditorAppearance,
   } = useAppStore()
 
   const content = (activeChapterId ? chapterContents[activeChapterId] : '') ?? ''
   const activeChapter = chapters.find(c => c.id === activeChapterId)
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const [showPreview, setShowPreview] = useState(true)
+  const textareaRef    = useRef<HTMLTextAreaElement>(null)
+  const toolbarRef     = useRef<HTMLDivElement>(null)
+  const [showPreview, setShowPreview]       = useState(true)
+  const [showSettings, setShowSettings]     = useState(false)
   const [popup, setPopup] = useState<{ query: string; position: { top: number; left: number }; atIndex: number } | null>(null)
+
+  // Close settings panel on outside click
+  useEffect(() => {
+    if (!showSettings) return
+    const handler = (e: MouseEvent) => {
+      if (toolbarRef.current && !toolbarRef.current.contains(e.target as Node)) setShowSettings(false)
+    }
+    window.addEventListener('mousedown', handler)
+    return () => window.removeEventListener('mousedown', handler)
+  }, [showSettings])
 
   // Zen mode: ESC to exit
   useEffect(() => {
@@ -155,6 +244,35 @@ export function Editor() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [isZenMode, toggleZenMode])
+
+  // Insert text at cursor
+  const insertAtCursor = useCallback((text: string) => {
+    const ta = textareaRef.current
+    if (!ta) {
+      setActiveChapterContent(content + text)
+      return
+    }
+    const start = ta.selectionStart
+    const end   = ta.selectionEnd
+    const next  = content.slice(0, start) + text + content.slice(end)
+    setActiveChapterContent(next)
+    setTimeout(() => {
+      ta.selectionStart = ta.selectionEnd = start + text.length
+      ta.focus()
+    }, 0)
+  }, [content, setActiveChapterContent])
+
+  // Ctrl+Shift+- → travessão
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '-') {
+        e.preventDefault()
+        insertAtCursor('— ')
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [insertAtCursor])
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
@@ -173,24 +291,28 @@ export function Editor() {
           query: atMatch[1],
           atIndex: cursor - atMatch[0].length,
           position: {
-            top: rect.top + row * 32 + 36,
-            left: Math.min(rect.left + col * 8.4, rect.right - 220),
+            top: rect.top + row * (editorFontSize * editorLineHeight) + 36,
+            left: Math.min(rect.left + col * (editorFontSize * 0.52), rect.right - 220),
           },
         })
       }
     } else {
       setPopup(null)
     }
-  }, [setActiveChapterContent])
+  }, [setActiveChapterContent, editorFontSize, editorLineHeight])
 
   const handleEntitySelect = useCallback((entity: LoreEntity) => {
     if (!popup) return
     const before = content.slice(0, popup.atIndex)
-    const after = content.slice(popup.atIndex + 1 + popup.query.length)
+    const after  = content.slice(popup.atIndex + 1 + popup.query.length)
     setActiveChapterContent(`${before}@${entity.name}${after}`)
     setPopup(null)
     setTimeout(() => textareaRef.current?.focus(), 0)
   }, [popup, content, setActiveChapterContent])
+
+  // Derived styles
+  const maxW  = editorMaxWidth > 0 ? `${editorMaxWidth}px` : 'none'
+  const fontStyle = { fontSize: editorFontSize, lineHeight: editorLineHeight, textAlign: editorTextAlign } as React.CSSProperties
 
   if (!activeChapterId) {
     return (
@@ -202,50 +324,85 @@ export function Editor() {
 
   return (
     <div className={`flex-1 flex flex-col min-h-0 relative ${isZenMode ? 'bg-zinc-950' : ''}`}>
-      {/* Toolbar — hidden in zen mode */}
+      {/* Toolbar */}
       {!isZenMode && (
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-zinc-800 bg-zinc-950 shrink-0">
-          <span className="text-xs font-medium text-zinc-300 truncate max-w-48">{activeChapter?.title}</span>
+        <div ref={toolbarRef} className="flex items-center gap-2 px-4 py-2 border-b border-zinc-800 bg-zinc-950 shrink-0 relative">
+          <span className="text-xs font-medium text-zinc-300 truncate max-w-36">{activeChapter?.title}</span>
           <div className="h-3 w-px bg-zinc-700" />
+
+          {/* Edit / Preview toggle */}
           <button onClick={() => setShowPreview(false)} className={`text-xs px-2 py-1 rounded ${!showPreview ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>Editar</button>
           <button onClick={() => setShowPreview(true)}  className={`text-xs px-2 py-1 rounded ${showPreview  ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>Visualizar</button>
+
+          <div className="h-3 w-px bg-zinc-700" />
+
+          {/* Travessão */}
+          <button
+            onClick={() => { setShowPreview(false); setTimeout(() => insertAtCursor('— '), 10) }}
+            title="Inserir travessão (Ctrl+Shift+-)"
+            className="flex items-center gap-1 text-xs px-2 py-1 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+          >
+            <Minus size={11} />
+            <span className="hidden sm:inline">— Travessão</span>
+          </button>
+
           <div className="flex-1" />
-          <span className="text-[10px] text-zinc-700">**negrito** *itálico* `code` @ lore</span>
+
+          {/* Font size quick selector */}
+          <div className="flex items-center gap-1">
+            <button onClick={() => setEditorAppearance({ editorFontSize: Math.max(13, editorFontSize - 1) })}
+              className="text-zinc-600 hover:text-zinc-300 text-xs w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-800">−</button>
+            <span className="text-[10px] text-zinc-600 w-8 text-center">{editorFontSize}px</span>
+            <button onClick={() => setEditorAppearance({ editorFontSize: Math.min(32, editorFontSize + 1) })}
+              className="text-zinc-600 hover:text-zinc-300 text-xs w-5 h-5 flex items-center justify-center rounded hover:bg-zinc-800">+</button>
+          </div>
+
+          {/* Alignment quick toggle */}
+          <button onClick={() => setEditorAppearance({ editorTextAlign: editorTextAlign === 'left' ? 'justify' : 'left' })}
+            className="text-zinc-600 hover:text-zinc-300 transition-colors" title="Alternar alinhamento">
+            {editorTextAlign === 'justify' ? <AlignJustify size={13} /> : <AlignLeft size={13} />}
+          </button>
+
+          {/* Page settings */}
+          <button onClick={() => setShowSettings(v => !v)}
+            className={`transition-colors ${showSettings ? 'text-violet-400' : 'text-zinc-600 hover:text-zinc-300'}`}
+            title="Configurações de página">
+            <Settings2 size={13} />
+          </button>
+
+          {showSettings && <PageSettingsPanel onClose={() => setShowSettings(false)} />}
         </div>
       )}
 
       {/* Content */}
       <div className={`flex-1 min-h-0 overflow-hidden ${isZenMode ? 'flex items-start justify-center pt-16' : ''}`}>
         {showPreview ? (
-          <div className={`h-full overflow-y-auto py-10 ${isZenMode ? 'w-full max-w-2xl' : 'px-8'}`}>
+          <div className="h-full overflow-y-auto py-10 px-8">
             {content.trim() === '' ? (
-              <p className="text-zinc-600 text-sm italic px-4">Nenhum conteúdo. Clique em "Editar" para escrever.</p>
+              <p className="text-zinc-600 text-sm italic">Nenhum conteúdo. Clique em "Editar" para escrever.</p>
             ) : (
-              <div className={`text-base font-serif ${isZenMode ? 'px-4' : 'max-w-3xl mx-auto'}`}>
+              <div className="mx-auto font-serif" style={{ maxWidth: maxW, ...fontStyle }}>
                 <RichTextRenderer content={content} entities={loreEntities} />
               </div>
             )}
           </div>
         ) : (
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleChange}
-            spellCheck={false}
-            className={`resize-none bg-transparent text-zinc-200 text-base leading-8 font-serif focus:outline-none ${
-              isZenMode
-                ? 'w-full max-w-2xl h-full py-10 px-4'
-                : 'w-full h-full px-8 py-8'
-            }`}
-            placeholder="Comece a escrever... Use @Nome para vincular lore, **texto** para negrito."
-          />
+          <div className="h-full overflow-y-auto py-8 px-8">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleChange}
+              spellCheck={false}
+              className="resize-none bg-transparent text-zinc-200 font-serif focus:outline-none w-full min-h-full block mx-auto"
+              style={{ maxWidth: maxW, ...fontStyle }}
+              placeholder="Comece a escrever... Use @Nome para vincular lore, **texto** para negrito, — para travessão."
+            />
+          </div>
         )}
       </div>
 
-      {/* Zen mode exit hint */}
       {isZenMode && <ZenBar onExit={toggleZenMode} />}
 
-      {/* Lore autocomplete popup */}
       {popup && (
         <LorePopup
           query={popup.query}
