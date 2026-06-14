@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown } from 'lucide-react'
+import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown, BookDown } from 'lucide-react'
 import { Progress } from './ui/progress'
 import { useAppStore } from '@/store/useAppStore'
 import { ExportImportModal } from './ExportImport'
+import { ExportBook } from './ExportBook'
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0')
@@ -26,6 +27,7 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
   const [showGoalInput, setShowGoalInput]   = useState(false)
   const [goalInput, setGoalInput]           = useState(String(dailyGoalWords))
   const [showExportImport, setShowExportImport] = useState(false)
+  const [showExportBook,   setShowExportBook]   = useState(false)
 
   useEffect(() => {
     if (isSprintActive) {
@@ -160,11 +162,20 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
         <span className="text-[10px] text-zinc-600 w-7 tabular-nums">{Math.round(xpProgress)}%</span>
       </div>
 
-      {/* Export / Import */}
+      {/* Export book (PDF / EPUB / MOBI) */}
+      <button
+        onClick={() => setShowExportBook(true)}
+        className="no-drag p-1.5 rounded-lg text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 transition-colors"
+        title="Exportar livro (PDF / EPUB / MOBI)"
+      >
+        <BookDown size={13} />
+      </button>
+
+      {/* Export / Import backup */}
       <button
         onClick={() => setShowExportImport(true)}
         className="no-drag p-1.5 rounded-lg text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 transition-colors"
-        title="Exportar / Importar backup"
+        title="Exportar / Importar backup JSON"
       >
         <FolderDown size={13} />
       </button>
@@ -185,6 +196,7 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
     </header>
 
     {showExportImport && <ExportImportModal onClose={() => setShowExportImport(false)} />}
+    {showExportBook   && <ExportBook onClose={() => setShowExportBook(false)} />}
   </>
   )
 }

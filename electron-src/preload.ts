@@ -19,5 +19,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('write-json', filename, data)
   },
 
-  closeCapture: () => ipcRenderer.invoke('close-capture'),
+  closeCapture:  () => ipcRenderer.invoke('close-capture'),
+  exportPdf:     (book: unknown) => ipcRenderer.invoke('export-pdf',  book),
+  exportEpub:    (book: unknown) => ipcRenderer.invoke('export-epub', book),
+  exportMobi:    (book: unknown) => ipcRenderer.invoke('export-mobi', book),
 })

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
+const export_1 = require("./export");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 // Handle squirrel events on Windows (installer lifecycle)
@@ -108,6 +109,9 @@ electron_1.ipcMain.handle('write-json', (_e, filename, data) => { writeJson(file
 electron_1.ipcMain.handle('close-capture', () => captureWindow?.close());
 electron_1.ipcMain.handle('open-external', (_e, url) => electron_1.shell.openExternal(url));
 electron_1.ipcMain.handle('show-window', () => { mainWindow?.show(); mainWindow?.focus(); });
+electron_1.ipcMain.handle('export-pdf', (_e, book) => (0, export_1.exportPdf)(book));
+electron_1.ipcMain.handle('export-epub', (_e, book) => (0, export_1.exportEpub)(book));
+electron_1.ipcMain.handle('export-mobi', (_e, book) => (0, export_1.exportMobi)(book));
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 let isQuitting = false;
 electron_1.app.whenReady().then(() => {

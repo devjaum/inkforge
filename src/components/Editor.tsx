@@ -101,7 +101,7 @@ function LoreChip({ entity }: { entity: LoreEntity }) {
 interface LorePopupProps {
   query: string
   entities: LoreEntity[]
-  anchor: { top: number; left: number }
+  anchor: { top: number; left: number; isAbove?: boolean } // <-- Adicionado isAbove
   onSelect: (entity: LoreEntity) => void
   onClose: () => void
 }
@@ -113,7 +113,11 @@ function LorePopup({ query, entities, anchor, onSelect, onClose }: LorePopupProp
   return (
     <div
       className="fixed z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-1 min-w-52"
-      style={{ top: anchor.top, left: anchor.left }}
+      style={{ 
+        top: anchor.top, 
+        left: anchor.left,
+        transform: anchor.isAbove ? 'translateY(-100%)' : 'none' // <-- Adicionado o transform
+      }}
     >
       <div className="px-2 py-1 text-[10px] text-zinc-500 uppercase tracking-wider border-b border-zinc-800 mb-1">Lore — escolha uma entidade</div>
       {filtered.map(entity => {
@@ -326,7 +330,7 @@ export function Editor() {
   const [searchQuery,  setSearchQuery]  = useState('')
   const [popup, setPopup] = useState<{
     query: string
-    anchor: { top: number; left: number }
+    anchor: { top: number; left: number; isAbove: boolean }
     atIndex: number
   } | null>(null)
 
@@ -393,26 +397,30 @@ export function Editor() {
     const cursor = e.target.selectionStart ?? 0
     const upTo   = value.slice(0, cursor)
     const atMatch = upTo.match(/@(\w*)$/)
+
     if (atMatch) {
-      const ta   = e.target
+      const ta = e.target
       const rect = ta.getBoundingClientRect()
-      const lines = upTo.split('\n')
-      const row   = lines.length - 1
-      const col   = lines[lines.length - 1].length
+      
+      // Usa a função espelho para pegar a posição real, considerando as quebras de linha (wrap)
+      const { top: caretTop, left: caretLeft } = getCursorXY(ta, cursor)
+      
+      // Posição Y na tela = Topo do Textarea - Scroll do Textarea + Posição do Cursor no Textarea
+      const cursorTop = rect.top - ta.scrollTop + caretTop
+      
       const lineH = editorFontSize * editorLineHeight
-      // The outer div scrolls, not the textarea — rect.top already reflects scroll offset
-      const cursorTop = rect.top + row * lineH
-      const POPUP_H   = 220 // estimated popup height
-      // Show above if there's room, otherwise below
-      const top = cursorTop > POPUP_H + 8
-        ? cursorTop - POPUP_H - 4
-        : cursorTop + lineH + 4
+      const POPUP_H = 220 
+      const isAbove = cursorTop > POPUP_H + 8
+
       setPopup({
         query: atMatch[1],
         atIndex: cursor - atMatch[0].length,
         anchor: {
-          top: Math.max(8, Math.min(top, window.innerHeight - POPUP_H - 8)),
-          left: Math.min(rect.left + col * (editorFontSize * 0.52), rect.right - 220),
+          // Usa a flag isAbove que criamos na resposta anterior
+          top: isAbove ? cursorTop - 4 : cursorTop + lineH + 4,
+          // Posição X real na tela
+          left: rect.left - ta.scrollLeft + caretLeft,
+          isAbove: isAbove, 
         },
       })
     } else {
@@ -550,4 +558,41 @@ export function Editor() {
       )}
     </div>
   )
+}
+
+// ── Textarea Cursor Position Helper ──────────────────────────────────────────
+function getCursorXY(input: HTMLTextAreaElement, selectionPoint: number) {
+  const div = document.createElement('div')
+  const copyStyle = getComputedStyle(input)
+  
+  // Copia todo o estilo da fonte, padding, etc., para o div invisível
+  for (const prop of Array.from(copyStyle)) {
+    div.style.setProperty(prop, copyStyle.getPropertyValue(prop))
+  }
+  
+  div.style.position = 'absolute'
+  div.style.visibility = 'hidden'
+  div.style.whiteSpace = 'pre-wrap'
+  div.style.wordWrap = 'break-word'
+  // O segredo está aqui: o div precisa ter a mesma largura exata para quebrar a linha igual
+  div.style.width = input.clientWidth + 'px'
+  
+  // Coloca o texto até o cursor
+  div.textContent = input.value.substring(0, selectionPoint)
+  
+  // Coloca um span onde o cursor estaria
+  const span = document.createElement('span')
+  span.textContent = input.value.substring(selectionPoint) || '.'
+  div.appendChild(span)
+  
+  document.body.appendChild(div)
+  
+  // Pega a posição (X, Y) do span
+  const top = span.offsetTop
+  const left = span.offsetLeft
+  
+  // Limpa o DOM
+  document.body.removeChild(div)
+  
+  return { top, left }
 }

@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, globalShortcut, shell, Tray, Menu, nativeImage } from 'electron'
+import { exportPdf, exportEpub, exportMobi, type BookData } from './export'
 import path from 'path'
 import fs from 'fs'
 
@@ -114,6 +115,9 @@ ipcMain.handle('write-json',    (_e, filename: string, data: unknown) => { write
 ipcMain.handle('close-capture', () => captureWindow?.close())
 ipcMain.handle('open-external', (_e, url: string) => shell.openExternal(url))
 ipcMain.handle('show-window',   () => { mainWindow?.show(); mainWindow?.focus() })
+ipcMain.handle('export-pdf',    (_e, book: BookData) => exportPdf(book))
+ipcMain.handle('export-epub',   (_e, book: BookData) => exportEpub(book))
+ipcMain.handle('export-mobi',   (_e, book: BookData) => exportMobi(book))
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 let isQuitting = false
