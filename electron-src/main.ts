@@ -92,7 +92,8 @@ let tray: Tray | null = null
 
 function createTray() {
   // Use a simple blank icon (16x16 transparent PNG) — in production use a real icon
-  const icon = nativeImage.createEmpty()
+  const icon = nativeImage.createFromPath(path.join(__dirname, '..', 'build', 'icon.ico'))
+  
   tray = new Tray(icon)
   tray.setToolTip('InkForge')
 

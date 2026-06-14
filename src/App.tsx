@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar'
 import { Editor } from './components/Editor'
 import { LevelUpToast } from './components/LevelUpToast'
 import { OmniSearch } from './components/OmniSearch'
+import { GlobalSearch } from './components/GlobalSearch'
 import { SaveIndicator } from './components/SaveIndicator'
 import { CaptureWindow } from './pages/CaptureWindow'
 import { usePersistence } from './hooks/usePersistence'
@@ -16,7 +17,8 @@ function isCapturePage() {
 
 export default function App() {
   const { isFocusMode, isZenMode, toggleFocusMode, toggleZenMode } = useAppStore()
-  const [omniOpen, setOmniOpen] = useState(false)
+  const [omniOpen, setOmniOpen]         = useState(false)
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
 
   usePersistence()
 
@@ -29,6 +31,11 @@ export default function App() {
       if (ctrl && (e.key === 'p' || e.key === 'k')) {
         e.preventDefault()
         setOmniOpen(v => !v)
+      }
+      // Ctrl+Shift+F — global search
+      if (ctrl && e.shiftKey && e.key === 'F') {
+        e.preventDefault()
+        setGlobalSearchOpen(v => !v)
       }
       // Ctrl+Shift+Z — zen mode
       if (ctrl && e.shiftKey && e.key === 'Z') {
@@ -54,6 +61,7 @@ export default function App() {
         <LevelUpToast />
         <SaveIndicator />
         <OmniSearch open={omniOpen} onClose={() => setOmniOpen(false)} />
+      <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
       </div>
     )
   }
@@ -75,6 +83,7 @@ export default function App() {
       <LevelUpToast />
       <SaveIndicator />
       <OmniSearch open={omniOpen} onClose={() => setOmniOpen(false)} />
+      <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
     </div>
   )
 }

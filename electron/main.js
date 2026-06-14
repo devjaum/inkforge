@@ -90,7 +90,7 @@ function createMainWindow() {
 let tray = null;
 function createTray() {
     // Use a simple blank icon (16x16 transparent PNG) — in production use a real icon
-    const icon = electron_1.nativeImage.createEmpty();
+    const icon = electron_1.nativeImage.createFromPath(path_1.default.join(__dirname, '..', 'build', 'icon.ico'));
     tray = new electron_1.Tray(icon);
     tray.setToolTip('InkForge');
     const contextMenu = electron_1.Menu.buildFromTemplate([

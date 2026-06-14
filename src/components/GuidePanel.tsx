@@ -1,6 +1,5 @@
-import { Keyboard, Hash, AtSign, Target, Zap, Eye } from 'lucide-react'
+import { Keyboard, Hash, AtSign, Target, Zap, Eye, FolderDown } from 'lucide-react'
 
-// ── Section wrapper ──────────────────────────────────────────────────────────
 function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
     <div className="mb-4">
@@ -35,16 +34,19 @@ function MdRow({ syntax, label }: { syntax: string; label: string }) {
   )
 }
 
-// ── Main panel ───────────────────────────────────────────────────────────────
 export function GuidePanel() {
   return (
     <div className="flex-1 overflow-y-auto px-2 py-3">
       <Section icon={<Keyboard size={12} />} title="Atalhos">
-        <Row keys={['Ctrl', 'P']}         label="Busca global (OmniSearch)" />
-        <Row keys={['Ctrl', 'Shift', 'Z']} label="Modo Zen (tela cheia)" />
-        <Row keys={['Esc']}               label="Sair do Modo Zen" />
-        <Row keys={['F']}                 label="Modo Foco (esconde sidebar)" />
-        <Row keys={['Ctrl', 'Shift', '␣']} label="Captura Rápida (global)" />
+        <Row keys={['Ctrl', 'S']}            label="Salvar imediatamente" />
+        <Row keys={['Ctrl', 'P']}            label="OmniSearch — buscar capítulos" />
+        <Row keys={['Ctrl', 'F']}            label="Buscar no capítulo atual" />
+        <Row keys={['Ctrl', 'Shift', 'F']}   label="Busca global em todos os capítulos" />
+        <Row keys={['Ctrl', 'Shift', '−']}   label="Inserir travessão (—)" />
+        <Row keys={['Ctrl', 'Shift', 'Z']}   label="Modo Zen (tela cheia)" />
+        <Row keys={['Esc']}                  label="Sair do Modo Zen / Fechar busca" />
+        <Row keys={['F']}                    label="Modo Foco (esconde sidebar)" />
+        <Row keys={['Ctrl', 'Shift', '␣']}  label="Captura Rápida (global)" />
       </Section>
 
       <Section icon={<Hash size={12} />} title="Markdown">
@@ -60,7 +62,8 @@ export function GuidePanel() {
       <Section icon={<AtSign size={12} />} title="Menções de Lore">
         <div className="px-2 space-y-1.5 text-[11px] text-zinc-400 leading-relaxed">
           <p>Digite <code className="text-violet-300 bg-violet-400/10 px-1 rounded">@</code> seguido do nome para abrir o autocomplete de entidades do Lore.</p>
-          <p>Passe o mouse sobre uma menção <code className="text-violet-300 bg-violet-400/10 px-1 rounded">@Nome</code> no preview para ver os detalhes da entidade.</p>
+          <p>O popup aparece <span className="text-zinc-300 font-medium">acima do cursor</span> automaticamente.</p>
+          <p>Passe o mouse sobre uma menção <code className="text-violet-300 bg-violet-400/10 px-1 rounded">@Nome</code> no preview para ver os detalhes.</p>
           <p>Crie entidades na aba <span className="text-violet-400 font-medium">Lore</span> antes de mencioná-las.</p>
         </div>
       </Section>
@@ -86,6 +89,14 @@ export function GuidePanel() {
           <p>Capítulos <span className="text-zinc-300 font-medium">Planejados</span> ficam borrados e bloqueados para proteger spoilers.</p>
           <p>Clique em <span className="text-violet-400">▶</span> para promover um capítulo planejado a Rascunho e começar a escrever.</p>
           <p>Capítulos <span className="text-emerald-400 font-medium">Concluídos</span> podem ser revertidos a Rascunho com o botão <span className="text-amber-400">↺</span>.</p>
+        </div>
+      </Section>
+
+      <Section icon={<FolderDown size={12} />} title="Exportar / Importar">
+        <div className="px-2 space-y-1.5 text-[11px] text-zinc-400 leading-relaxed">
+          <p>Clique no ícone <FolderDown size={10} className="inline text-zinc-400" /> na barra superior para exportar ou importar um backup completo.</p>
+          <p>O arquivo exportado contém todos os capítulos, entidades do Lore e configurações.</p>
+          <p><span className="text-amber-400 font-medium">Atenção:</span> importar substitui todos os dados atuais.</p>
         </div>
       </Section>
     </div>
