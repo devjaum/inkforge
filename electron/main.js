@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const export_1 = require("./export");
+const updater_1 = require("./updater");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 // Handle squirrel events on Windows (installer lifecycle)
@@ -117,6 +118,8 @@ let isQuitting = false;
 electron_1.app.whenReady().then(() => {
     createMainWindow();
     createTray();
+    // In-app updater (checks GitHub Releases)
+    (0, updater_1.initUpdater)(() => mainWindow);
     // Global shortcut: Quick Capture
     electron_1.globalShortcut.register('CommandOrControl+Shift+Space', createCaptureWindow);
     electron_1.app.on('activate', () => {

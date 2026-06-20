@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown, BookDown } from 'lucide-react'
+import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown, BookDown, RefreshCw } from 'lucide-react'
 import { Progress } from './ui/progress'
 import { useAppStore } from '@/store/useAppStore'
 import { ExportImportModal } from './ExportImport'
 import { ExportBook } from './ExportBook'
+import { CHECK_UPDATES_EVENT } from './UpdateNotifier'
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0')
@@ -178,6 +179,15 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
         title="Exportar / Importar backup JSON"
       >
         <FolderDown size={13} />
+      </button>
+
+      {/* Check for updates */}
+      <button
+        onClick={() => window.dispatchEvent(new Event(CHECK_UPDATES_EVENT))}
+        className="no-drag p-1.5 rounded-lg text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 transition-colors"
+        title="Verificar atualizações"
+      >
+        <RefreshCw size={13} />
       </button>
 
       {/* Silent mode */}

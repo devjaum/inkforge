@@ -20,4 +20,14 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     exportPdf: (book) => electron_1.ipcRenderer.invoke('export-pdf', book),
     exportEpub: (book) => electron_1.ipcRenderer.invoke('export-epub', book),
     exportMobi: (book) => electron_1.ipcRenderer.invoke('export-mobi', book),
+    // ── Updater ──────────────────────────────────────────────────────────────
+    checkForUpdates: () => electron_1.ipcRenderer.invoke('check-for-updates'),
+    getUpdateStatus: () => electron_1.ipcRenderer.invoke('get-update-status'),
+    getAppVersion: () => electron_1.ipcRenderer.invoke('get-app-version'),
+    downloadUpdate: (url) => electron_1.ipcRenderer.invoke('download-update', url),
+    onUpdateStatus: (cb) => {
+        const listener = (_e, status) => cb(status);
+        electron_1.ipcRenderer.on('update-status', listener);
+        return () => electron_1.ipcRenderer.removeListener('update-status', listener);
+    },
 });

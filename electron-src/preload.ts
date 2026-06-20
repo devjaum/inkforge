@@ -23,4 +23,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportPdf:     (book: unknown) => ipcRenderer.invoke('export-pdf',  book),
   exportEpub:    (book: unknown) => ipcRenderer.invoke('export-epub', book),
   exportMobi:    (book: unknown) => ipcRenderer.invoke('export-mobi', book),
+
+  // ── Updater ──────────────────────────────────────────────────────────────
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  getUpdateStatus: () => ipcRenderer.invoke('get-update-status'),
+  getAppVersion:   () => ipcRenderer.invoke('get-app-version'),
+  downloadUpdate:  (url: string) => ipcRenderer.invoke('download-update', url),
+  onUpdateStatus:  (cb: (status: unknown) => void) => {
+    const listener = (_e: unknown, status: unknown) => cb(status)
+    ipcRenderer.on('update-status', listener)
+    return () => ipcRenderer.removeListener('update-status', listener)
+  },
 })

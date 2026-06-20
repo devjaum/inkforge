@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, globalShortcut, shell, Tray, Menu, nativeImage } from 'electron'
 import { exportPdf, exportEpub, exportMobi, type BookData } from './export'
+import { initUpdater } from './updater'
 import path from 'path'
 import fs from 'fs'
 
@@ -125,6 +126,9 @@ let isQuitting = false
 app.whenReady().then(() => {
   createMainWindow()
   createTray()
+
+  // In-app updater (checks GitHub Releases)
+  initUpdater(() => mainWindow)
 
   // Global shortcut: Quick Capture
   globalShortcut.register('CommandOrControl+Shift+Space', createCaptureWindow)

@@ -7,6 +7,7 @@ import { LevelUpToast } from './components/LevelUpToast'
 import { OmniSearch } from './components/OmniSearch'
 import { GlobalSearch } from './components/GlobalSearch'
 import { SaveIndicator } from './components/SaveIndicator'
+import { UpdateNotifier } from './components/UpdateNotifier'
 import { CaptureWindow } from './pages/CaptureWindow'
 import { usePersistence } from './hooks/usePersistence'
 import './index.css'
@@ -60,6 +61,7 @@ export default function App() {
         <Editor />
         <LevelUpToast />
         <SaveIndicator />
+        <UpdateNotifier />
         <OmniSearch open={omniOpen} onClose={() => setOmniOpen(false)} />
       <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
       </div>
@@ -82,6 +84,7 @@ export default function App() {
 
       <LevelUpToast />
       <SaveIndicator />
+      <UpdateNotifier />
       <OmniSearch open={omniOpen} onClose={() => setOmniOpen(false)} />
       <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
     </div>
