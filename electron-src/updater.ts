@@ -99,7 +99,15 @@ function setupAutoUpdater() {
     send({ state: 'ready', version, notes: latestInfo?.notes || releaseNotes || '' })
   })
   autoUpdater.on('error', (err) => {
-    send({ state: 'error', message: err == null ? 'erro desconhecido' : (err.message || String(err)) })
+    const msg = err == null ? '' : (err.message || String(err))
+    // Feed ausente / sem RELEASES (ex.: release publicada sem os artefatos do
+    // Squirrel) não é um erro acionável para o usuário — tratamos como "sem
+    // atualização" em vez de exibir o stack trace do Squirrel.
+    if (/empty or corrupted|not found|404|no such|can ?not find|no published|no releases/i.test(msg)) {
+      send({ state: 'not-available', version: app.getVersion() })
+      return
+    }
+    send({ state: 'error', message: msg || 'erro desconhecido' })
   })
   autoUpdaterWired = true
 }
