@@ -9,13 +9,26 @@ module.exports = {
     name: 'InkForge',
     executableName: 'inkforge',
     icon: path.join(__dirname, 'build', 'icon'),
+    // O binário do Electron já está em cache e íntegro. A verificação de checksum
+    // baixa o SHASUMS256.txt do GitHub a cada build e, em redes lentas/bloqueadas,
+    // trava o passo "Copying files" indefinidamente. Como usamos o cache local,
+    // desligamos essa verificação remota.
+    download: {
+      unsafelyDisableChecksums: true,
+    },
     ignore: [
       /^\/electron-src/,
       /^\/src/,
       /^\/public/,
+      /^\/out/,
       /^\/\.claude/,
       /^\/\.git/,
+      /^\/\.vscode/,
       /^\/node_modules\/.cache/,
+      /^\/a\.json$/,
+      /^\/\.gitignore$/,
+      /^\/README\.md$/,
+      /^\/eslint\.config\.js$/,
       /tsconfig.*\.json$/,
       /vite\.config\.ts$/,
       /forge\.config\.js$/,
