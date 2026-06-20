@@ -4,7 +4,7 @@ Editor de escrita criativa para autores — capítulos, *lore*, metas, gamifica�
 
 ---
 
-## ✨ Funcionalidades
+## Funcionalidades
 
 - **Editor com Markdown leve** — `**negrito**`, `*itálico*`, títulos, travessão (`Ctrl+Shift+-`) e modo Editar/Visualizar.
 - **Lore com @menções** — digite `@Nome` para referenciar personagens, locais, itens e facções, com cartão de detalhes ao passar o mouse.
@@ -18,7 +18,7 @@ Editor de escrita criativa para autores — capítulos, *lore*, metas, gamifica�
 - **Exportação** — livro completo em **PDF**, **EPUB** e **MOBI**, além de backup/importação em JSON.
 - **Atualizador in-app** — verifica novas versões via GitHub Releases.
 
-## ⌨️ Atalhos
+##  Atalhos
 
 | Atalho | Ação |
 | --- | --- |
@@ -31,7 +31,7 @@ Editor de escrita criativa para autores — capítulos, *lore*, metas, gamifica�
 | `Ctrl+Shift+Space` | Captura rápida (global) |
 | `Ctrl+S` | Salvar tudo (cria checkpoint no histórico) |
 
-## 🧱 Stack
+##  Stack
 
 - [Electron](https://www.electronjs.org/) + [Electron Forge](https://www.electronforge.io/) (empacotamento / instalador Squirrel)
 - [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
@@ -40,7 +40,7 @@ Editor de escrita criativa para autores — capítulos, *lore*, metas, gamifica�
 
 ---
 
-## 🚀 Desenvolvimento
+##  Desenvolvimento
 
 > [!IMPORTANT]
 > **Use Node.js 22 LTS.** O Node 24 possui uma regressão que faz a biblioteca de descompactação (`extract-zip`) **travar** ao empacotar o Electron — o `npm run make` fica preso em *"Copying files"* indefinidamente. Com o Node 22 LTS o build funciona normalmente.
@@ -54,7 +54,7 @@ npm install      # instalar dependências
 npm run dev      # rodar em desenvolvimento (Vite + Electron com hot reload)
 ```
 
-## 📦 Build / Instalador
+##  Build / Instalador
 
 ```bash
 npm run package  # gera o app empacotado em out/
@@ -63,7 +63,7 @@ npm run make     # gera o instalador (Windows: out/make/squirrel.windows/x64/Ink
 
 O `make` também executa `tsc` + `vite build` (front-end) e `tsc -p tsconfig.electron.json` (processo principal do Electron) automaticamente.
 
-## 🔄 Atualizações automáticas
+##  Atualizações automáticas
 
 O app verifica a última *release* publicada em `github.com/<owner>/<repo>` (configurado em [`electron-src/updater.ts`](electron-src/updater.ts)) e, se houver versão maior que a instalada, oferece o download do instalador.
 
@@ -82,7 +82,7 @@ Antes da primeira release, "Verificar atualização" simplesmente informa que vo
 
 ---
 
-## 🗂️ Estrutura
+##  Estrutura
 
 ```
 electron-src/   processo principal do Electron (main, preload, export, updater) — TypeScript
@@ -94,6 +94,6 @@ forge.config.js configuração do Electron Forge
 
 Os dados do usuário (capítulos, lore, histórico, progresso) ficam em arquivos JSON na pasta de dados do app (`userData/inkforge-data`).
 
-## 📄 Licença
+##  Licença
 
 Projeto pessoal. Todos os direitos reservados ao autor, salvo indicação em contrário.
