@@ -43,6 +43,13 @@ export async function checkForUpdates(win: BrowserWindow | null): Promise<Update
     const res = await fetch(FEED, {
       headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'InkForge-Updater' },
     })
+    // 404 = repositório sem releases publicadas ainda (ou repo privado/inexistente
+    // para a API pública). Não é um erro real — tratamos como "sem atualização".
+    if (res.status === 404) {
+      const status: UpdateStatus = { state: 'not-available', version: app.getVersion() }
+      send(win, status)
+      return status
+    }
     if (!res.ok) throw new Error(`GitHub respondeu ${res.status}`)
     const data = await res.json() as {
       tag_name: string
