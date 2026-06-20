@@ -30,6 +30,21 @@ export interface InboxItem {
   createdAt: string
 }
 
+export interface ChapterSnapshot {
+  id: string
+  timestamp: string   // ISO
+  content: string
+  wordCount: number
+  label?: string      // optional manual label, e.g. "Manual"
+}
+
+export type TypingAnimation = 'none' | 'typewriter' | 'glow' | 'caret'
+
+// Snapshot throttling: skip if last snapshot is recent and change is small.
+const SNAPSHOT_MIN_INTERVAL = 2 * 60 * 1000 // 2 minutes
+const SNAPSHOT_MIN_WORD_DELTA = 25
+const SNAPSHOT_MAX_PER_CHAPTER = 60
+
 const XP_PER_WORD = 2
 const XP_PER_LEVEL = 500
 
@@ -64,6 +79,13 @@ interface AppState {
   // Editor
   chapterContents: Record<string, string>
 
+  // History (snapshots per chapter, newest last)
+  chapterHistory: Record<string, ChapterSnapshot[]>
+
+  // Typing animation
+  typingAnimation: TypingAnimation
+  setTypingAnimation: (v: TypingAnimation) => void
+
   // Chapters
   chapters: Chapter[]
   activeChapterId: string | null
@@ -90,6 +112,7 @@ interface AppState {
   hydrate: (data: {
     chapters?: Chapter[]
     chapterContents?: Record<string, string>
+    chapterHistory?: Record<string, ChapterSnapshot[]>
     loreEntities?: LoreEntity[]
     loreTypes?: LoreType[]
     dailyGoalWords?: number
@@ -99,6 +122,7 @@ interface AppState {
     editorFontSize?: number
     editorLineHeight?: number
     editorTextAlign?: 'left' | 'justify'
+    typingAnimation?: TypingAnimation
   }) => void
 
   // Actions — modes
@@ -140,6 +164,11 @@ interface AppState {
 
   // Actions — inbox
   addInboxItem: (text: string) => void
+
+  // Actions — history
+  recordSnapshot: (chapterId?: string, label?: string) => void
+  restoreSnapshot: (chapterId: string, snapshotId: string) => void
+  deleteSnapshot: (chapterId: string, snapshotId: string) => void
 }
 
 const MOCK_CHAPTERS: Chapter[] = [
@@ -207,6 +236,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   dailyGoalWords: 500,
 
   chapterContents: INITIAL_CONTENTS,
+  chapterHistory: {},
+  typingAnimation: 'none',
+  setTypingAnimation: (v) => set({ typingAnimation: v }),
   chapters: MOCK_CHAPTERS,
   activeChapterId: '2',
 
@@ -233,6 +265,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       ...(data.chapters        ? { chapters: data.chapters } : {}),
       ...(data.chapterContents ? { chapterContents: data.chapterContents } : {}),
+      ...(data.chapterHistory  ? { chapterHistory: data.chapterHistory } : {}),
+      ...(data.typingAnimation ? { typingAnimation: data.typingAnimation } : {}),
       ...(data.loreEntities    ? { loreEntities: data.loreEntities } : {}),
       ...(data.loreTypes       ? { loreTypes: data.loreTypes } : {}),
       ...(data.dailyGoalWords  ? { dailyGoalWords: data.dailyGoalWords } : {}),
@@ -300,7 +334,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // ── Chapters ────────────────────────────────────────────────────────────
   setActiveChapter: (id) => {
-    const { chapterContents } = get()
+    const { chapterContents, activeChapterId, recordSnapshot } = get()
+    // Snapshot the chapter we're leaving (throttled internally) so switching
+    // chapters becomes a natural history checkpoint.
+    if (activeChapterId && activeChapterId !== id) recordSnapshot(activeChapterId)
     set({ activeChapterId: id, activeWordCount: countWords(chapterContents[id] ?? '') })
   },
 
@@ -413,6 +450,74 @@ export const useAppStore = create<AppState>((set, get) => ({
   addInboxItem: (text) => {
     const item: InboxItem = { id: Date.now().toString(), text, createdAt: new Date().toISOString() }
     set(s => ({ inboxItems: [...s.inboxItems, item] }))
+  },
+
+  // ── History ───────────────────────────────────────────────────────────────
+  recordSnapshot: (chapterId, label) => {
+    const { activeChapterId, chapterContents, chapterHistory } = get()
+    const id = chapterId ?? activeChapterId
+    if (!id) return
+    const content = chapterContents[id] ?? ''
+    const history = chapterHistory[id] ?? []
+    const last = history[history.length - 1]
+    const manual = !!label
+
+    // For automatic snapshots, skip when nothing meaningful changed.
+    if (!manual && last) {
+      if (last.content === content) return
+      const wordDelta = Math.abs(countWords(content) - last.wordCount)
+      const elapsed = Date.now() - new Date(last.timestamp).getTime()
+      if (elapsed < SNAPSHOT_MIN_INTERVAL && wordDelta < SNAPSHOT_MIN_WORD_DELTA) return
+    }
+    // Avoid storing an identical snapshot back-to-back even for manual saves.
+    if (last && last.content === content && !manual) return
+
+    const snapshot: ChapterSnapshot = {
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      content,
+      wordCount: countWords(content),
+      ...(label ? { label } : {}),
+    }
+    const updated = [...history, snapshot].slice(-SNAPSHOT_MAX_PER_CHAPTER)
+    set({ chapterHistory: { ...chapterHistory, [id]: updated } })
+  },
+
+  restoreSnapshot: (chapterId, snapshotId) => {
+    const { chapterHistory, chapterContents, chapters, activeChapterId } = get()
+    const history = chapterHistory[chapterId] ?? []
+    const snap = history.find(s => s.id === snapshotId)
+    if (!snap) return
+    // Snapshot the current state first so a restore is itself undoable.
+    const current = chapterContents[chapterId] ?? ''
+    const last = history[history.length - 1]
+    const withCurrent = (last && last.content === current)
+      ? history
+      : [...history, {
+          id: Date.now().toString(),
+          timestamp: new Date().toISOString(),
+          content: current,
+          wordCount: countWords(current),
+          label: 'Antes de restaurar',
+        }].slice(-SNAPSHOT_MAX_PER_CHAPTER)
+
+    const newContents = { ...chapterContents, [chapterId]: snap.content }
+    set({
+      chapterHistory: { ...chapterHistory, [chapterId]: withCurrent },
+      chapterContents: newContents,
+      chapters: chapters.map(c => c.id === chapterId ? { ...c, wordCount: snap.wordCount } : c),
+      ...(chapterId === activeChapterId ? { activeWordCount: snap.wordCount } : {}),
+      totalWordCount: Object.values(newContents).reduce((s, t) => s + countWords(t), 0),
+    })
+  },
+
+  deleteSnapshot: (chapterId, snapshotId) => {
+    set(s => ({
+      chapterHistory: {
+        ...s.chapterHistory,
+        [chapterId]: (s.chapterHistory[chapterId] ?? []).filter(snap => snap.id !== snapshotId),
+      },
+    }))
   },
 
   // ── Chapter status ──────────────────────────────────────────────────────

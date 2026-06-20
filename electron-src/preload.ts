@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-const allowedFiles = ['lore.json', 'progress.json', 'inbox.json', 'chapters.json', 'content.json']
+const allowedFiles = ['lore.json', 'progress.json', 'inbox.json', 'chapters.json', 'content.json', 'history.json']
 
 function validateFilename(filename: string): void {
   if (!allowedFiles.includes(filename)) {

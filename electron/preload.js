@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
-const allowedFiles = ['lore.json', 'progress.json', 'inbox.json', 'chapters.json', 'content.json'];
+const allowedFiles = ['lore.json', 'progress.json', 'inbox.json', 'chapters.json', 'content.json', 'history.json'];
 function validateFilename(filename) {
     if (!allowedFiles.includes(filename)) {
         throw new Error(`Access denied: ${filename} is not an allowed data file.`);

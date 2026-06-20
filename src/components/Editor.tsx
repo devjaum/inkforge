@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { X, AlignLeft, AlignJustify, Minus, Settings2, Search, ChevronUp, ChevronDown } from 'lucide-react'
-import { useAppStore, type LoreEntity } from '@/store/useAppStore'
+import { X, AlignLeft, AlignJustify, Minus, Settings2, Search, ChevronUp, ChevronDown, History } from 'lucide-react'
+import { useAppStore, type LoreEntity, type TypingAnimation } from '@/store/useAppStore'
+import { HistoryPanel } from './HistoryPanel'
 
 // ── Markdown parser ──────────────────────────────────────────────────────────
 function renderMarkdownLine(
@@ -253,8 +254,15 @@ const LINE_HEIGHTS = [
   { label: '2.5×', value: 2.5 },
 ]
 
+const TYPING_ANIMATIONS: { label: string; value: TypingAnimation }[] = [
+  { label: 'Nenhuma',    value: 'none' },
+  { label: 'Brilho',     value: 'glow' },
+  { label: 'Cursor',     value: 'caret' },
+  { label: 'Typewriter', value: 'typewriter' },
+]
+
 function PageSettingsPanel({ onClose }: { onClose: () => void }) {
-  const { editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, setEditorAppearance } = useAppStore()
+  const { editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, setEditorAppearance, typingAnimation, setTypingAnimation } = useAppStore()
   return (
     <div className="absolute top-full right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-4 w-64" onClick={e => e.stopPropagation()}>
       <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-3">Aparência da Página</div>
@@ -304,6 +312,17 @@ function PageSettingsPanel({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </div>
+      <div className="mt-3">
+        <div className="text-[10px] text-zinc-600 mb-1.5">Animação de digitação</div>
+        <div className="grid grid-cols-2 gap-1">
+          {TYPING_ANIMATIONS.map(a => (
+            <button key={a.value} onClick={() => setTypingAnimation(a.value)}
+              className={`text-[10px] py-1 rounded-md transition-colors ${typingAnimation === a.value ? 'bg-violet-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
+              {a.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <button onClick={onClose} className="absolute top-2 right-2 text-zinc-600 hover:text-zinc-400"><X size={12} /></button>
     </div>
   )
@@ -315,6 +334,7 @@ export function Editor() {
     activeChapterId, chapterContents, loreEntities, chapters,
     isZenMode, toggleZenMode, setActiveChapterContent,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, setEditorAppearance,
+    typingAnimation,
   } = useAppStore()
 
   const content       = (activeChapterId ? chapterContents[activeChapterId] : '') ?? ''
@@ -327,7 +347,10 @@ export function Editor() {
   const [showPreview,  setShowPreview]  = useState(true)
   const [showSettings, setShowSettings] = useState(false)
   const [showSearch,   setShowSearch]   = useState(false)
+  const [showHistory,  setShowHistory]  = useState(false)
   const [searchQuery,  setSearchQuery]  = useState('')
+  const [isTyping,     setIsTyping]     = useState(false)
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [popup, setPopup] = useState<{
     query: string
     anchor: { top: number; left: number; isAbove: boolean }
@@ -391,10 +414,33 @@ export function Editor() {
     return () => window.removeEventListener('keydown', h)
   }, [insertAtCursor])
 
+  // Typing-animation feedback (glow flash + typewriter line-centering)
+  const pingTyping = useCallback((ta: HTMLTextAreaElement, cursor: number) => {
+    if (typingAnimation === 'none') return
+    if (typingAnimation === 'glow' || typingAnimation === 'caret') {
+      setIsTyping(true)
+      if (typingTimer.current) clearTimeout(typingTimer.current)
+      typingTimer.current = setTimeout(() => setIsTyping(false), 500)
+    }
+    if (typingAnimation === 'typewriter') {
+      // Keep the caret's line vertically centered in its scroll container.
+      const scroller = ta.parentElement
+      if (scroller) {
+        const lineH = editorFontSize * editorLineHeight
+        const lineIndex = ta.value.slice(0, cursor).split('\n').length - 1
+        const target = ta.offsetTop + lineIndex * lineH - scroller.clientHeight / 2 + lineH / 2
+        scroller.scrollTo({ top: Math.max(0, target), behavior: 'smooth' })
+      }
+    }
+  }, [typingAnimation, editorFontSize, editorLineHeight])
+
+  useEffect(() => () => { if (typingTimer.current) clearTimeout(typingTimer.current) }, [])
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value  = e.target.value
     setActiveChapterContent(value)
     const cursor = e.target.selectionStart ?? 0
+    pingTyping(e.target, cursor)
     const upTo   = value.slice(0, cursor)
     const atMatch = upTo.match(/@(\w*)$/)
 
@@ -426,7 +472,7 @@ export function Editor() {
     } else {
       setPopup(null)
     }
-  }, [setActiveChapterContent, editorFontSize, editorLineHeight])
+  }, [setActiveChapterContent, editorFontSize, editorLineHeight, pingTyping])
 
   const handleEntitySelect = useCallback((entity: LoreEntity) => {
     if (!popup) return
@@ -479,6 +525,16 @@ export function Editor() {
             className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${showSearch ? 'text-violet-400 bg-violet-400/10' : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'}`}
           >
             <Search size={11} />
+          </button>
+
+          {/* History */}
+          <button
+            onClick={() => setShowHistory(true)}
+            title="Histórico de versões"
+            className="flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800"
+          >
+            <History size={11} />
+            <span className="hidden sm:inline">Histórico</span>
           </button>
 
           <div className="flex-1" />
@@ -537,7 +593,10 @@ export function Editor() {
               value={content}
               onChange={handleChange}
               spellCheck={false}
-              className="resize-none bg-transparent text-zinc-200 font-serif focus:outline-none w-full min-h-full block mx-auto"
+              className={`resize-none bg-transparent text-zinc-200 font-serif focus:outline-none w-full min-h-full block mx-auto
+                ${typingAnimation === 'caret' ? 'anim-caret' : ''}
+                ${typingAnimation === 'glow' ? `anim-glow ${isTyping ? 'is-typing' : ''}` : ''}
+                ${typingAnimation === 'typewriter' ? 'anim-caret' : ''}`}
               style={{ maxWidth: maxW, ...fontStyle }}
               placeholder="Comece a escrever... Use @Nome para lore, **negrito**, *itálico*, — para travessão."
             />
@@ -556,6 +615,8 @@ export function Editor() {
           onClose={() => setPopup(null)}
         />
       )}
+
+      {showHistory && <HistoryPanel onClose={() => setShowHistory(false)} />}
     </div>
   )
 }

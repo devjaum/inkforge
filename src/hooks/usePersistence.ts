@@ -13,47 +13,52 @@ async function writeJson(file: string, data: unknown): Promise<void> {
 
 export function usePersistence() {
   const {
-    chapters, chapterContents, loreEntities, loreTypes,
-    dailyGoalWords, todayWordCount,
+    chapters, chapterContents, chapterHistory, loreEntities, loreTypes,
+    dailyGoalWords, todayWordCount, typingAnimation,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
-    hydrate, setSaveStatus,
+    hydrate, setSaveStatus, recordSnapshot,
   } = useAppStore()
 
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
   const latestRef = useRef({
-    chapters, chapterContents, loreEntities, loreTypes,
-    dailyGoalWords, todayWordCount,
+    chapters, chapterContents, chapterHistory, loreEntities, loreTypes,
+    dailyGoalWords, todayWordCount, typingAnimation,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
   })
   latestRef.current = {
-    chapters, chapterContents, loreEntities, loreTypes,
-    dailyGoalWords, todayWordCount,
+    chapters, chapterContents, chapterHistory, loreEntities, loreTypes,
+    dailyGoalWords, todayWordCount, typingAnimation,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
   }
 
   // ── Load on mount ────────────────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
-      const [contentRaw, chaptersRaw, loreRaw, progressRaw] = await Promise.all([
+      const [contentRaw, chaptersRaw, loreRaw, progressRaw, historyRaw] = await Promise.all([
         readJson('content.json'),
         readJson('chapters.json'),
         readJson('lore.json'),
         readJson('progress.json'),
+        readJson('history.json'),
       ])
 
       const content  = contentRaw  as { chapterContents?: Record<string, string> } | null
       const chaps    = chaptersRaw as { chapters?: unknown[] } | null
       const lore     = loreRaw     as { loreEntities?: unknown[]; loreTypes?: unknown[] } | null
+      const history  = historyRaw  as { chapterHistory?: Record<string, unknown[]> } | null
       const progress = progressRaw as {
         dailyGoalWords?: number; todayWordCount?: number; activeChapterId?: string
         editorMaxWidth?: number; editorFontSize?: number; editorLineHeight?: number; editorTextAlign?: 'left' | 'justify'
+        typingAnimation?: Parameters<typeof hydrate>[0]['typingAnimation']
       } | null
 
-      if (!content && !chaps && !lore && !progress) return
+      if (!content && !chaps && !lore && !progress && !history) return
 
       hydrate({
         chapterContents:  content?.chapterContents,
         chapters:         Array.isArray(chaps?.chapters) ? (chaps!.chapters as Parameters<typeof hydrate>[0]['chapters']) : undefined,
+        chapterHistory:   history?.chapterHistory && typeof history.chapterHistory === 'object'
+          ? (history.chapterHistory as Parameters<typeof hydrate>[0]['chapterHistory']) : undefined,
         loreEntities:     Array.isArray(lore?.loreEntities) ? (lore!.loreEntities as Parameters<typeof hydrate>[0]['loreEntities']) : undefined,
         loreTypes:        Array.isArray(lore?.loreTypes) ? (lore!.loreTypes as Parameters<typeof hydrate>[0]['loreTypes']) : undefined,
         dailyGoalWords:   progress?.dailyGoalWords,
@@ -63,6 +68,7 @@ export function usePersistence() {
         editorFontSize:   progress?.editorFontSize,
         editorLineHeight: progress?.editorLineHeight,
         editorTextAlign:  progress?.editorTextAlign,
+        typingAnimation:  progress?.typingAnimation,
       })
     }
     load()
@@ -82,8 +88,15 @@ export function usePersistence() {
 
   useEffect(() => {
     schedule('content', () => writeJson('content.json', { chapterContents, savedAt: new Date().toISOString() }))
+    // Take an automatic, throttled history snapshot of the active chapter.
+    recordSnapshot()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterContents])
+
+  useEffect(() => {
+    schedule('history', () => writeJson('history.json', { chapterHistory }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterHistory])
 
   useEffect(() => {
     schedule('chapters', () => writeJson('chapters.json', { chapters }))
@@ -97,11 +110,11 @@ export function usePersistence() {
 
   useEffect(() => {
     schedule('progress', () => writeJson('progress.json', {
-      dailyGoalWords, todayWordCount,
+      dailyGoalWords, todayWordCount, typingAnimation,
       editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dailyGoalWords, todayWordCount, editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign])
+  }, [dailyGoalWords, todayWordCount, typingAnimation, editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign])
 
   // ── Ctrl+S — save all immediately ───────────────────────────────────────────
   useEffect(() => {
@@ -111,13 +124,17 @@ export function usePersistence() {
       Object.values(timers.current).forEach(clearTimeout)
       timers.current = {}
       setSaveStatus('saving')
+      // Manual save → force a labelled history checkpoint.
+      recordSnapshot(undefined, 'Salvo (Ctrl+S)')
       const d = latestRef.current
       await Promise.all([
         writeJson('content.json',  { chapterContents: d.chapterContents, savedAt: new Date().toISOString() }),
         writeJson('chapters.json', { chapters: d.chapters }),
         writeJson('lore.json',     { loreEntities: d.loreEntities, loreTypes: d.loreTypes }),
+        writeJson('history.json',  { chapterHistory: useAppStore.getState().chapterHistory }),
         writeJson('progress.json', {
           dailyGoalWords: d.dailyGoalWords, todayWordCount: d.todayWordCount,
+          typingAnimation: d.typingAnimation,
           editorMaxWidth: d.editorMaxWidth, editorFontSize: d.editorFontSize,
           editorLineHeight: d.editorLineHeight, editorTextAlign: d.editorTextAlign,
         }),
