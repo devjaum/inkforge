@@ -25,6 +25,7 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
     getUpdateStatus: () => electron_1.ipcRenderer.invoke('get-update-status'),
     getAppVersion: () => electron_1.ipcRenderer.invoke('get-app-version'),
     downloadUpdate: (url) => electron_1.ipcRenderer.invoke('download-update', url),
+    installUpdate: () => electron_1.ipcRenderer.invoke('install-update'),
     onUpdateStatus: (cb) => {
         const listener = (_e, status) => cb(status);
         electron_1.ipcRenderer.on('update-status', listener);

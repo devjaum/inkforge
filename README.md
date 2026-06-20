@@ -65,16 +65,18 @@ O `make` também executa `tsc` + `vite build` (front-end) e `tsc -p tsconfig.ele
 
 ##  Atualizações automáticas
 
-O app verifica a última *release* publicada em `github.com/<owner>/<repo>` (configurado em [`electron-src/updater.ts`](electron-src/updater.ts)) e, se houver versão maior que a instalada, oferece o download do instalador.
+No **app instalado**, a atualização é **baixada e instalada pelo próprio app**: o `autoUpdater` do Electron usa o serviço gratuito [update.electronjs.org](https://github.com/electron/update.electronjs.org). Quando há versão nova, ela baixa em segundo plano e o app mostra **"Reiniciar e instalar"**. Em desenvolvimento (`npm run dev`), o auto-update não roda — apenas a checagem pela API do GitHub, com download manual no navegador. Lógica em [`electron-src/updater.ts`](electron-src/updater.ts).
 
 Para que funcione:
 
-1. O repositório precisa estar **público** (a API do GitHub não enxerga repositórios privados sem token).
-2. Publique uma **release** com tag acima da versão do `package.json` e anexe o `Setup.exe`:
+1. O repositório precisa estar **público** (a API do GitHub e o update.electronjs.org não enxergam repositórios privados sem token).
+2. Publique uma **release** com tag acima da versão do `package.json` anexando **todos** os artefatos do Squirrel (o `update.electronjs.org` precisa do `RELEASES` e do `.nupkg`, não só do `Setup.exe`):
 
 ```bash
 gh release create v1.5.0 \
   "out/make/squirrel.windows/x64/InkForge-Setup.exe" \
+  "out/make/squirrel.windows/x64/RELEASES" \
+  "out/make/squirrel.windows/x64/InkForge-1.5.0-full.nupkg" \
   --title "v1.5.0" --notes "Notas da versão..."
 ```
 
