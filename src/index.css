@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+/* ── Light theme — flip zinc palette so bg-zinc-950 → near white, text-zinc-100 → near black ── */
+html.light {
+  --color-zinc-50:  oklch(12% 0.004 264);
+  --color-zinc-100: oklch(16% 0.005 264);
+  --color-zinc-200: oklch(24% 0.007 264);
+  --color-zinc-300: oklch(34% 0.009 264);
+  --color-zinc-400: oklch(46% 0.010 264);
+  --color-zinc-500: oklch(56% 0.010 264);
+  --color-zinc-600: oklch(68% 0.008 264);
+  --color-zinc-700: oklch(82% 0.005 264);
+  --color-zinc-800: oklch(89% 0.004 264);
+  --color-zinc-900: oklch(94% 0.003 264);
+  --color-zinc-950: oklch(98% 0.002 264);
+}
+
+html.light body {
+  background-color: oklch(98% 0.002 264);
+  color: oklch(16% 0.005 264);
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #c4c4c8;
+}
+
 @layer base {
   * {
     box-sizing: border-box;

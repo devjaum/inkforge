@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown, BookDown, RefreshCw } from 'lucide-react'
+import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown, BookDown, RefreshCw, Sun, Moon } from 'lucide-react'
 import { Progress } from './ui/progress'
 import { useAppStore } from '@/store/useAppStore'
 import { ExportImportModal } from './ExportImport'
@@ -14,9 +14,11 @@ function formatTime(seconds: number): string {
 
 interface TopBarProps {
   onOpenSearch: () => void
+  isDark: boolean
+  onToggleTheme: () => void
 }
 
-export function TopBar({ onOpenSearch }: TopBarProps) {
+export function TopBar({ onOpenSearch, isDark, onToggleTheme }: TopBarProps) {
   const {
     isFocusMode, isZenMode, isSprintActive, sprintSeconds,
     level, xpProgress, activeWordCount, todayWordCount, dailyGoalWords, showLevelUp, silentMode,
@@ -188,6 +190,15 @@ export function TopBar({ onOpenSearch }: TopBarProps) {
         title="Verificar atualizações"
       >
         <RefreshCw size={13} />
+      </button>
+
+      {/* Theme toggle */}
+      <button
+        onClick={onToggleTheme}
+        className="no-drag p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+        title={isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+      >
+        {isDark ? <Sun size={13} /> : <Moon size={13} />}
       </button>
 
       {/* Silent mode */}

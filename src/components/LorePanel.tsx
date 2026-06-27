@@ -413,19 +413,21 @@ export function LorePanel({ embedded = false }: { embedded?: boolean }) {
 
         {/* Tag filter pills + manage button */}
         {allTags.length > 0 && (
-          <div className="flex gap-1 flex-wrap items-center">
-            {allTags.map(t => (
-              <button key={t} onClick={() => setTagFilter(f => f === t ? null : t)}
-                className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border text-[10px] transition-all ${
-                  tagFilter === t ? tagColor(t) : 'border-zinc-700 text-zinc-600 hover:text-zinc-400'
-                }`}
-              >
-                <Tag size={8} />{t}
-              </button>
-            ))}
+          <div className="flex items-start gap-1">
+            <div className="flex gap-1 flex-wrap max-h-16 overflow-y-auto flex-1">
+              {allTags.map(t => (
+                <button key={t} onClick={() => setTagFilter(f => f === t ? null : t)}
+                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border text-[10px] transition-all ${
+                    tagFilter === t ? tagColor(t) : 'border-zinc-700 text-zinc-600 hover:text-zinc-400'
+                  }`}
+                >
+                  <Tag size={8} />{t}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => setShowTagManager(true)}
-              className="ml-auto text-zinc-700 hover:text-zinc-400 transition-colors shrink-0"
+              className="text-zinc-700 hover:text-zinc-400 transition-colors shrink-0 mt-0.5"
               title="Gerenciar tags"
             >
               <Settings2 size={11} />

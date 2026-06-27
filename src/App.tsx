@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAppStore } from './store/useAppStore'
+import { useTheme } from './hooks/useTheme'
 import { TopBar } from './components/TopBar'
 import { Sidebar } from './components/Sidebar'
 import { Editor } from './components/Editor'
@@ -20,6 +21,7 @@ export default function App() {
   const { isFocusMode, isZenMode, toggleFocusMode, toggleZenMode } = useAppStore()
   const [omniOpen, setOmniOpen]         = useState(false)
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
+  const { isDark, toggleTheme } = useTheme()
 
   usePersistence()
 
@@ -70,7 +72,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 overflow-hidden">
-      <TopBar onOpenSearch={() => setOmniOpen(true)} />
+      <TopBar onOpenSearch={() => setOmniOpen(true)} isDark={isDark} onToggleTheme={toggleTheme} />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div className={`sidebar-transition overflow-hidden shrink-0 ${isFocusMode ? 'w-0 opacity-0 pointer-events-none' : 'w-56 opacity-100'}`}>

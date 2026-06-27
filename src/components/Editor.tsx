@@ -114,27 +114,29 @@ function LorePopup({ query, entities, anchor, onSelect, onClose }: LorePopupProp
   return (
     <div
       className="fixed z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-1 min-w-52"
-      style={{ 
-        top: anchor.top, 
+      style={{
+        top: anchor.top,
         left: anchor.left,
-        transform: anchor.isAbove ? 'translateY(-100%)' : 'none' // <-- Adicionado o transform
+        transform: anchor.isAbove ? 'translateY(-100%)' : 'none'
       }}
     >
       <div className="px-2 py-1 text-[10px] text-zinc-500 uppercase tracking-wider border-b border-zinc-800 mb-1">Lore — escolha uma entidade</div>
-      {filtered.map(entity => {
-        const typeInfo  = loreTypes.find(t => t.value === entity.type)
-        const textClass = typeInfo?.color.split(' ').find(c => c.startsWith('text-')) ?? 'text-zinc-400'
-        return (
-          <button
-            key={entity.id}
-            onMouseDown={e => { e.preventDefault(); onSelect(entity) }}
-            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors text-left"
-          >
-            <span className={`text-[10px] font-medium ${textClass}`}>{typeInfo?.label ?? entity.type}</span>
-            <span className="text-sm text-zinc-200">{entity.name}</span>
-          </button>
-        )
-      })}
+      <div className="max-h-52 overflow-y-auto">
+        {filtered.map(entity => {
+          const typeInfo  = loreTypes.find(t => t.value === entity.type)
+          const textClass = typeInfo?.color.split(' ').find(c => c.startsWith('text-')) ?? 'text-zinc-400'
+          return (
+            <button
+              key={entity.id}
+              onMouseDown={e => { e.preventDefault(); onSelect(entity) }}
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors text-left"
+            >
+              <span className={`text-[10px] font-medium ${textClass}`}>{typeInfo?.label ?? entity.type}</span>
+              <span className="text-sm text-zinc-200">{entity.name}</span>
+            </button>
+          )
+        })}
+      </div>
       <button onClick={onClose} className="absolute top-1 right-1 p-1 text-zinc-600 hover:text-zinc-400"><X size={10} /></button>
     </div>
   )
