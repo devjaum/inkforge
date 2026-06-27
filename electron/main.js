@@ -60,12 +60,17 @@ function createCaptureWindow() {
 }
 // ── Main window ─────────────────────────────────────────────────────────────
 let mainWindow = null;
+// Title bar overlay (min/max/close buttons) colors per theme.
+const TITLEBAR_THEME = {
+    dark: { color: '#09090b', symbolColor: '#a1a1aa' },
+    light: { color: '#fafafa', symbolColor: '#52525b' },
+};
 function createMainWindow() {
     mainWindow = new electron_1.BrowserWindow({
         width: 1280, height: 800,
         minWidth: 800, minHeight: 600,
         titleBarStyle: 'hidden',
-        titleBarOverlay: { color: '#09090b', symbolColor: '#a1a1aa', height: 48 },
+        titleBarOverlay: { ...TITLEBAR_THEME.dark, height: 48 },
         icon: path_1.default.join(__dirname, '..', 'build', 'icon.ico'),
         webPreferences: {
             preload: path_1.default.join(__dirname, 'preload.js'),
@@ -110,6 +115,9 @@ electron_1.ipcMain.handle('write-json', (_e, filename, data) => { writeJson(file
 electron_1.ipcMain.handle('close-capture', () => captureWindow?.close());
 electron_1.ipcMain.handle('open-external', (_e, url) => electron_1.shell.openExternal(url));
 electron_1.ipcMain.handle('show-window', () => { mainWindow?.show(); mainWindow?.focus(); });
+electron_1.ipcMain.handle('set-titlebar-theme', (_e, theme) => {
+    mainWindow?.setTitleBarOverlay({ ...TITLEBAR_THEME[theme === 'light' ? 'light' : 'dark'], height: 48 });
+});
 electron_1.ipcMain.handle('export-pdf', (_e, book) => (0, export_1.exportPdf)(book));
 electron_1.ipcMain.handle('export-epub', (_e, book) => (0, export_1.exportEpub)(book));
 electron_1.ipcMain.handle('export-mobi', (_e, book) => (0, export_1.exportMobi)(book));

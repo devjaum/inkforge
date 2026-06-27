@@ -57,12 +57,18 @@ function createCaptureWindow() {
 // ── Main window ─────────────────────────────────────────────────────────────
 let mainWindow: BrowserWindow | null = null
 
+// Title bar overlay (min/max/close buttons) colors per theme.
+const TITLEBAR_THEME = {
+  dark:  { color: '#09090b', symbolColor: '#a1a1aa' },
+  light: { color: '#fafafa', symbolColor: '#52525b' },
+}
+
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1280, height: 800,
     minWidth: 800, minHeight: 600,
     titleBarStyle: 'hidden',
-    titleBarOverlay: { color: '#09090b', symbolColor: '#a1a1aa', height: 48 },
+    titleBarOverlay: { ...TITLEBAR_THEME.dark, height: 48 },
     icon: path.join(__dirname, '..', 'build', 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -116,6 +122,9 @@ ipcMain.handle('write-json',    (_e, filename: string, data: unknown) => { write
 ipcMain.handle('close-capture', () => captureWindow?.close())
 ipcMain.handle('open-external', (_e, url: string) => shell.openExternal(url))
 ipcMain.handle('show-window',   () => { mainWindow?.show(); mainWindow?.focus() })
+ipcMain.handle('set-titlebar-theme', (_e, theme: 'light' | 'dark') => {
+  mainWindow?.setTitleBarOverlay({ ...TITLEBAR_THEME[theme === 'light' ? 'light' : 'dark'], height: 48 })
+})
 ipcMain.handle('export-pdf',    (_e, book: BookData) => exportPdf(book))
 ipcMain.handle('export-epub',   (_e, book: BookData) => exportEpub(book))
 ipcMain.handle('export-mobi',   (_e, book: BookData) => exportMobi(book))

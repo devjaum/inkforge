@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   closeCapture:  () => ipcRenderer.invoke('close-capture'),
+  setTitleBarTheme: (theme: 'light' | 'dark') => ipcRenderer.invoke('set-titlebar-theme', theme),
   exportPdf:     (book: unknown) => ipcRenderer.invoke('export-pdf',  book),
   exportEpub:    (book: unknown) => ipcRenderer.invoke('export-epub', book),
   exportMobi:    (book: unknown) => ipcRenderer.invoke('export-mobi', book),

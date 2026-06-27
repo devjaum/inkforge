@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { X, AlignLeft, AlignJustify, Minus, Settings2, Search, ChevronUp, ChevronDown, History } from 'lucide-react'
+import { X, AlignLeft, AlignJustify, Minus, Settings2, Search, ChevronUp, ChevronDown, History, Keyboard } from 'lucide-react'
 import { useAppStore, type LoreEntity, type TypingAnimation } from '@/store/useAppStore'
 import { HistoryPanel } from './HistoryPanel'
 
@@ -263,10 +263,20 @@ const TYPING_ANIMATIONS: { label: string; value: TypingAnimation }[] = [
   { label: 'Typewriter', value: 'typewriter' },
 ]
 
+const FOCUS_POSITIONS = [
+  { label: 'Topo',   value: 0.25 },
+  { label: 'Centro', value: 0.5  },
+  { label: 'Abaixo', value: 0.75 },
+]
+
 function PageSettingsPanel({ onClose }: { onClose: () => void }) {
-  const { editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, setEditorAppearance, typingAnimation, setTypingAnimation } = useAppStore()
+  const {
+    editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, setEditorAppearance,
+    typingAnimation, setTypingAnimation,
+    typewriterMode, typewriterFocusRatio, setTypewriterMode, setTypewriterFocusRatio,
+  } = useAppStore()
   return (
-    <div className="absolute top-full right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-4 w-64" onClick={e => e.stopPropagation()}>
+    <div className="absolute top-full right-2 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-4 w-64 max-w-[calc(100vw-1rem)]" onClick={e => e.stopPropagation()}>
       <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-3">Aparência da Página</div>
       <div className="mb-3">
         <div className="text-[10px] text-zinc-600 mb-1.5">Largura</div>
@@ -325,6 +335,35 @@ function PageSettingsPanel({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       </div>
+      {/* Typewriter mode */}
+      <div className="mt-3 border-t border-zinc-800 pt-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5 text-[10px] text-zinc-400">
+            <Keyboard size={11} className="text-violet-400" />
+            Modo Máquina de Escrever
+          </div>
+          <button
+            onClick={() => setTypewriterMode(!typewriterMode)}
+            className={`relative w-8 h-4 rounded-full transition-colors ${typewriterMode ? 'bg-violet-600' : 'bg-zinc-700'}`}
+          >
+            <span className={`absolute left-0 top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${typewriterMode ? 'translate-x-3' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
+        {typewriterMode && (
+          <div>
+            <div className="text-[10px] text-zinc-600 mb-1.5">Posição do cursor</div>
+            <div className="flex gap-1">
+              {FOCUS_POSITIONS.map(p => (
+                <button key={p.value} onClick={() => setTypewriterFocusRatio(p.value)}
+                  className={`flex-1 text-[10px] py-1 rounded-md transition-colors ${typewriterFocusRatio === p.value ? 'bg-violet-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <button onClick={onClose} className="absolute top-2 right-2 text-zinc-600 hover:text-zinc-400"><X size={12} /></button>
     </div>
   )
@@ -337,6 +376,7 @@ export function Editor() {
     isZenMode, toggleZenMode, setActiveChapterContent,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, setEditorAppearance,
     typingAnimation,
+    typewriterMode, typewriterFocusRatio,
   } = useAppStore()
 
   const content       = (activeChapterId ? chapterContents[activeChapterId] : '') ?? ''
@@ -416,25 +456,29 @@ export function Editor() {
     return () => window.removeEventListener('keydown', h)
   }, [insertAtCursor])
 
-  // Typing-animation feedback (glow flash + typewriter line-centering)
+  // Typing-animation feedback (glow flash) + typewriter scroll centering
   const pingTyping = useCallback((ta: HTMLTextAreaElement, cursor: number) => {
-    if (typingAnimation === 'none') return
-    if (typingAnimation === 'glow' || typingAnimation === 'caret') {
+    if (typingAnimation === 'glow') {
       setIsTyping(true)
       if (typingTimer.current) clearTimeout(typingTimer.current)
       typingTimer.current = setTimeout(() => setIsTyping(false), 500)
     }
-    if (typingAnimation === 'typewriter') {
-      // Keep the caret's line vertically centered in its scroll container.
-      const scroller = ta.parentElement
-      if (scroller) {
-        const lineH = editorFontSize * editorLineHeight
-        const lineIndex = ta.value.slice(0, cursor).split('\n').length - 1
-        const target = ta.offsetTop + lineIndex * lineH - scroller.clientHeight / 2 + lineH / 2
-        scroller.scrollTo({ top: Math.max(0, target), behavior: 'smooth' })
-      }
+
+    if (typewriterMode) {
+      const container = scrollRef.current
+      if (!container) return
+      const { top: cursorLocalTop } = getCursorXY(ta, cursor)
+      const lineH = editorFontSize * editorLineHeight
+      const containerRect = container.getBoundingClientRect()
+      const taRect = ta.getBoundingClientRect()
+      // Pixel position of the cursor top relative to the viewport
+      const cursorVPTop = taRect.top + cursorLocalTop - ta.scrollTop
+      // Where we want the center of the cursor line to sit on screen
+      const targetVPTop = containerRect.top + containerRect.height * typewriterFocusRatio - lineH / 2
+      const delta = cursorVPTop - targetVPTop
+      container.scrollTo({ top: Math.max(0, container.scrollTop + delta), behavior: 'smooth' })
     }
-  }, [typingAnimation, editorFontSize, editorLineHeight])
+  }, [typingAnimation, typewriterMode, typewriterFocusRatio, editorFontSize, editorLineHeight])
 
   useEffect(() => () => { if (typingTimer.current) clearTimeout(typingTimer.current) }, [])
 
@@ -589,7 +633,17 @@ export function Editor() {
             )}
           </div>
         ) : (
-          <div className="h-full overflow-y-auto py-8 px-8">
+          <div
+            ref={scrollRef}
+            className="h-full overflow-y-auto px-8"
+            style={typewriterMode ? {
+              // Padding superior modesto: o conteúdo já escrito permanece visível
+              // a partir do topo. Padding inferior grande: permite que a linha
+              // atual suba até o ponto de foco, fixando o cursor no centro.
+              paddingTop:    '2rem',
+              paddingBottom: `calc(${(1 - typewriterFocusRatio) * 100}vh)`,
+            } : { paddingTop: '2rem', paddingBottom: '2rem' }}
+          >
             <textarea
               ref={textareaRef}
               value={content}

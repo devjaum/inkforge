@@ -104,6 +104,12 @@ interface AppState {
   editorTextAlign: 'left' | 'justify'
   setEditorAppearance: (s: Partial<Pick<AppState, 'editorMaxWidth' | 'editorFontSize' | 'editorLineHeight' | 'editorTextAlign'>>) => void
 
+  // Typewriter mode
+  typewriterMode: boolean
+  typewriterFocusRatio: number   // 0.25 | 0.5 | 0.75
+  setTypewriterMode: (v: boolean) => void
+  setTypewriterFocusRatio: (v: number) => void
+
   // Save status
   saveStatus: 'idle' | 'saving' | 'saved'
   setSaveStatus: (s: 'idle' | 'saving' | 'saved') => void
@@ -123,6 +129,8 @@ interface AppState {
     editorLineHeight?: number
     editorTextAlign?: 'left' | 'justify'
     typingAnimation?: TypingAnimation
+    typewriterMode?: boolean
+    typewriterFocusRatio?: number
   }) => void
 
   // Actions — modes
@@ -252,6 +260,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   editorTextAlign: 'left',
   setEditorAppearance: (s) => set(s),
 
+  typewriterMode: false,
+  typewriterFocusRatio: 0.5,
+  setTypewriterMode: (v) => set({ typewriterMode: v }),
+  setTypewriterFocusRatio: (v) => set({ typewriterFocusRatio: v }),
+
   saveStatus: 'idle',
   setSaveStatus: (s) => set({ saveStatus: s }),
 
@@ -275,6 +288,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       ...(data.editorFontSize  !== undefined ? { editorFontSize: data.editorFontSize } : {}),
       ...(data.editorLineHeight !== undefined ? { editorLineHeight: data.editorLineHeight } : {}),
       ...(data.editorTextAlign ? { editorTextAlign: data.editorTextAlign } : {}),
+      ...(data.typewriterMode  !== undefined ? { typewriterMode: data.typewriterMode } : {}),
+      ...(data.typewriterFocusRatio !== undefined ? { typewriterFocusRatio: data.typewriterFocusRatio } : {}),
       activeChapterId: activeId,
       activeWordCount: activeId ? countWords(contents[activeId] ?? '') : 0,
       totalWordCount: Object.values(contents).reduce((s, t) => s + countWords(t), 0),

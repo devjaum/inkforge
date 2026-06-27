@@ -7,6 +7,7 @@ declare global {
       readJson: (filename: string) => Promise<unknown>
       writeJson: (filename: string, data: unknown) => Promise<boolean>
       closeCapture: () => Promise<void>
+      setTitleBarTheme?: (theme: 'light' | 'dark') => Promise<void>
     }
   }
 }

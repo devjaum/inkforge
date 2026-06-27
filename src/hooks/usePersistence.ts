@@ -16,6 +16,7 @@ export function usePersistence() {
     chapters, chapterContents, chapterHistory, loreEntities, loreTypes,
     dailyGoalWords, todayWordCount, typingAnimation,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
+    typewriterMode, typewriterFocusRatio,
     hydrate, setSaveStatus, recordSnapshot,
   } = useAppStore()
 
@@ -24,11 +25,13 @@ export function usePersistence() {
     chapters, chapterContents, chapterHistory, loreEntities, loreTypes,
     dailyGoalWords, todayWordCount, typingAnimation,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
+    typewriterMode, typewriterFocusRatio,
   })
   latestRef.current = {
     chapters, chapterContents, chapterHistory, loreEntities, loreTypes,
     dailyGoalWords, todayWordCount, typingAnimation,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
+    typewriterMode, typewriterFocusRatio,
   }
 
   // ── Load on mount ────────────────────────────────────────────────────────────
@@ -50,6 +53,7 @@ export function usePersistence() {
         dailyGoalWords?: number; todayWordCount?: number; activeChapterId?: string
         editorMaxWidth?: number; editorFontSize?: number; editorLineHeight?: number; editorTextAlign?: 'left' | 'justify'
         typingAnimation?: Parameters<typeof hydrate>[0]['typingAnimation']
+        typewriterMode?: boolean; typewriterFocusRatio?: number
       } | null
 
       if (!content && !chaps && !lore && !progress && !history) return
@@ -68,7 +72,9 @@ export function usePersistence() {
         editorFontSize:   progress?.editorFontSize,
         editorLineHeight: progress?.editorLineHeight,
         editorTextAlign:  progress?.editorTextAlign,
-        typingAnimation:  progress?.typingAnimation,
+        typingAnimation:      progress?.typingAnimation,
+        typewriterMode:       progress?.typewriterMode,
+        typewriterFocusRatio: progress?.typewriterFocusRatio,
       })
     }
     load()
@@ -112,9 +118,10 @@ export function usePersistence() {
     schedule('progress', () => writeJson('progress.json', {
       dailyGoalWords, todayWordCount, typingAnimation,
       editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
+      typewriterMode, typewriterFocusRatio,
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dailyGoalWords, todayWordCount, typingAnimation, editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign])
+  }, [dailyGoalWords, todayWordCount, typingAnimation, editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, typewriterMode, typewriterFocusRatio])
 
   // ── Ctrl+S — save all immediately ───────────────────────────────────────────
   useEffect(() => {
@@ -137,6 +144,7 @@ export function usePersistence() {
           typingAnimation: d.typingAnimation,
           editorMaxWidth: d.editorMaxWidth, editorFontSize: d.editorFontSize,
           editorLineHeight: d.editorLineHeight, editorTextAlign: d.editorTextAlign,
+          typewriterMode: d.typewriterMode, typewriterFocusRatio: d.typewriterFocusRatio,
         }),
       ])
       setSaveStatus('saved')

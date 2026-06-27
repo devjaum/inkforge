@@ -17,6 +17,8 @@ export function useTheme() {
       root.classList.add('dark')
     }
     localStorage.setItem('inkforge-theme', theme)
+    // Sync the Electron window controls (minimize/maximize/close) with the theme
+    window.electronAPI?.setTitleBarTheme?.(theme)
   }, [theme])
 
   const toggleTheme = () => setThemeState(t => t === 'dark' ? 'light' : 'dark')

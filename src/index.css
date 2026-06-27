@@ -1,27 +1,54 @@
 @import "tailwindcss";
 
-/* ── Light theme — flip zinc palette so bg-zinc-950 → near white, text-zinc-100 → near black ── */
+/* ── Light theme ──────────────────────────────────────────────────────────────
+   The UI is built on the zinc scale (bg-zinc-950 = app bg, text-zinc-100 = text).
+   We mirror the scale using the REAL Tailwind zinc hex values so every shade stays
+   a clean, familiar gray. zinc-N ⇄ zinc-(1000−N). ───────────────────────────── */
 html.light {
-  --color-zinc-50:  oklch(12% 0.004 264);
-  --color-zinc-100: oklch(16% 0.005 264);
-  --color-zinc-200: oklch(24% 0.007 264);
-  --color-zinc-300: oklch(34% 0.009 264);
-  --color-zinc-400: oklch(46% 0.010 264);
-  --color-zinc-500: oklch(56% 0.010 264);
-  --color-zinc-600: oklch(68% 0.008 264);
-  --color-zinc-700: oklch(82% 0.005 264);
-  --color-zinc-800: oklch(89% 0.004 264);
-  --color-zinc-900: oklch(94% 0.003 264);
-  --color-zinc-950: oklch(98% 0.002 264);
+  --color-zinc-50:  #09090b;
+  --color-zinc-100: #18181b;
+  --color-zinc-200: #27272a;
+  --color-zinc-300: #3f3f46;
+  --color-zinc-400: #52525b;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #a1a1aa;
+  --color-zinc-700: #d4d4d8;
+  --color-zinc-800: #e4e4e7;
+  --color-zinc-900: #f4f4f5;
+  --color-zinc-950: #fafafa;
+
+  /* Accent text/icons sit on light backgrounds now — the -400 shades are too pale,
+     so darken them to their -600 values for readable contrast. Backgrounds that use
+     these with low opacity (bg-X-400/10, border-X-400/30) just become crisper tints. */
+  --color-violet-400:  #7c3aed;
+  --color-blue-400:    #2563eb;
+  --color-emerald-400: #059669;
+  --color-amber-400:   #d97706;
+  --color-rose-400:    #e11d48;
+  --color-cyan-400:    #0891b2;
+  --color-orange-400:  #ea580c;
+  --color-pink-400:    #db2777;
 }
 
 html.light body {
-  background-color: oklch(98% 0.002 264);
-  color: oklch(16% 0.005 264);
+  background-color: #fafafa;
+  color: #18181b;
 }
 
 html.light ::-webkit-scrollbar-thumb {
   background: #c4c4c8;
+}
+
+/* Lore mention: violet-400 (#818cf8) is too faint on white → use a darker violet */
+html.light .lore-entity {
+  color: #6d28d9;
+  border-bottom-color: #6d28d9;
+}
+
+/* Soften the typing glow on a light background */
+html.light .anim-glow.is-typing {
+  color: #18181b;
+  text-shadow: 0 0 8px rgba(124, 58, 237, 0.35);
 }
 
 @layer base {
