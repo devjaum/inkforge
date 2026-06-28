@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown, BookDown, RefreshCw, Sun, Moon } from 'lucide-react'
+import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown, BookDown, RefreshCw, Sun, Moon, Cloud } from 'lucide-react'
 import { Progress } from './ui/progress'
 import { useAppStore } from '@/store/useAppStore'
 import { ExportImportModal } from './ExportImport'
 import { ExportBook } from './ExportBook'
+import { GoogleDriveModal } from './GoogleDrive'
 import { CHECK_UPDATES_EVENT } from './UpdateNotifier'
 
 function formatTime(seconds: number): string {
@@ -31,6 +32,7 @@ export function TopBar({ onOpenSearch, isDark, onToggleTheme }: TopBarProps) {
   const [goalInput, setGoalInput]           = useState(String(dailyGoalWords))
   const [showExportImport, setShowExportImport] = useState(false)
   const [showExportBook,   setShowExportBook]   = useState(false)
+  const [showGoogleDrive,  setShowGoogleDrive]  = useState(false)
 
   useEffect(() => {
     if (isSprintActive) {
@@ -183,6 +185,15 @@ export function TopBar({ onOpenSearch, isDark, onToggleTheme }: TopBarProps) {
         <FolderDown size={13} />
       </button>
 
+      {/* Google Drive */}
+      <button
+        onClick={() => setShowGoogleDrive(true)}
+        className="no-drag p-1.5 rounded-lg text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 transition-colors"
+        title="Sincronizar com Google Drive"
+      >
+        <Cloud size={13} />
+      </button>
+
       {/* Check for updates */}
       <button
         onClick={() => window.dispatchEvent(new Event(CHECK_UPDATES_EVENT))}
@@ -218,6 +229,7 @@ export function TopBar({ onOpenSearch, isDark, onToggleTheme }: TopBarProps) {
 
     {showExportImport && <ExportImportModal onClose={() => setShowExportImport(false)} />}
     {showExportBook   && <ExportBook onClose={() => setShowExportBook(false)} />}
+    {showGoogleDrive  && <GoogleDriveModal onClose={() => setShowGoogleDrive(false)} />}
   </>
   )
 }

@@ -32,4 +32,11 @@ electron_1.contextBridge.exposeInMainWorld('electronAPI', {
         electron_1.ipcRenderer.on('update-status', listener);
         return () => electron_1.ipcRenderer.removeListener('update-status', listener);
     },
+    // ── Google Drive ───────────────────────────────────────────────────────────
+    gdriveStatus: () => electron_1.ipcRenderer.invoke('gdrive-status'),
+    gdriveSetCredentials: (creds) => electron_1.ipcRenderer.invoke('gdrive-set-credentials', creds),
+    gdriveConnect: () => electron_1.ipcRenderer.invoke('gdrive-connect'),
+    gdriveDisconnect: () => electron_1.ipcRenderer.invoke('gdrive-disconnect'),
+    gdriveBackup: () => electron_1.ipcRenderer.invoke('gdrive-backup'),
+    gdriveRestore: () => electron_1.ipcRenderer.invoke('gdrive-restore'),
 });

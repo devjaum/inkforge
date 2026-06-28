@@ -16,6 +16,7 @@ Editor de escrita criativa para autores — capítulos, *lore*, metas, gamifica�
 - **Captura rápida** — janela global via `Ctrl+Shift+Space`.
 - **Busca** — no capítulo (`Ctrl+F`) e global (`Ctrl+Shift+F` / `Ctrl+P`).
 - **Exportação** — livro completo em **PDF**, **EPUB** e **MOBI**, além de backup/importação em JSON.
+- **Sincronização com Google Drive** — salvar/carregar os dados manualmente numa pasta "InkForge" no seu Drive.
 - **Atualizador in-app** — verifica novas versões via GitHub Releases.
 
 ##  Atalhos
@@ -81,6 +82,20 @@ gh release create v1.5.0 \
 ```
 
 Antes da primeira release, "Verificar atualização" simplesmente informa que você está na versão mais recente.
+
+##  Sincronização com Google Drive
+
+Botão ☁️ na barra superior. Salva/carrega os arquivos de dados (capítulos, lore, histórico, progresso) numa pasta **"InkForge"** visível no seu Drive (escopo mínimo `drive.file`). É **manual**: *Salvar no Drive* (upload) e *Carregar do Drive* (download — substitui os dados locais).
+
+Requer um **OAuth Client próprio** (gratuito), criado uma vez:
+
+1. [Google Cloud Console](https://console.cloud.google.com) → crie um projeto.
+2. **APIs e Serviços → Biblioteca** → ative a **Google Drive API**.
+3. **Tela de consentimento OAuth** → tipo "Externo", adicione seu e-mail como *usuário de teste*.
+4. **Credenciais → Criar credencial → ID do cliente OAuth → Tipo: App para computador (Desktop app)**.
+5. Copie o **Client ID** e **Client Secret** e cole no app (botão ☁️ → campos de credenciais). Ficam salvos localmente em `userData` (não vão para o Drive nem para o repositório).
+
+A autenticação usa o fluxo PKCE com redirect em `127.0.0.1` (loopback) — não é preciso registrar URIs. Lógica em [`electron-src/googleDrive.ts`](electron-src/googleDrive.ts).
 
 ---
 

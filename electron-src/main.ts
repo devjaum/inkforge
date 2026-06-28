@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, globalShortcut, shell, Tray, Menu, nativeImage } from 'electron'
 import { exportPdf, exportEpub, exportMobi, type BookData } from './export'
 import { initUpdater } from './updater'
+import { initGoogleDrive } from './googleDrive'
 import path from 'path'
 import fs from 'fs'
 
@@ -138,6 +139,9 @@ app.whenReady().then(() => {
 
   // In-app updater (checks GitHub Releases)
   initUpdater(() => mainWindow)
+
+  // Google Drive sync (manual backup/restore)
+  initGoogleDrive(() => mainWindow)
 
   // Global shortcut: Quick Capture
   globalShortcut.register('CommandOrControl+Shift+Space', createCaptureWindow)
