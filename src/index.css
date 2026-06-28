@@ -1,55 +1,62 @@
 @import "tailwindcss";
 
-/* ── Light theme ──────────────────────────────────────────────────────────────
-   The UI is built on the zinc scale (bg-zinc-950 = app bg, text-zinc-100 = text).
-   We mirror the scale using the REAL Tailwind zinc hex values so every shade stays
-   a clean, familiar gray. zinc-N ⇄ zinc-(1000−N). ───────────────────────────── */
-html.light {
-  --color-zinc-50:  #09090b;
-  --color-zinc-100: #18181b;
-  --color-zinc-200: #27272a;
-  --color-zinc-300: #3f3f46;
-  --color-zinc-400: #52525b;
-  --color-zinc-500: #71717a;
-  --color-zinc-600: #a1a1aa;
-  --color-zinc-700: #d4d4d8;
-  --color-zinc-800: #e4e4e7;
-  --color-zinc-900: #f4f4f5;
-  --color-zinc-950: #fafafa;
+/* ── Themes ───────────────────────────────────────────────────────────────────
+   The UI is built on the zinc scale (bg-zinc-950 = app bg, text-zinc-100 = text)
+   plus accent -400 colors. Each theme just remaps those CSS variables. The default
+   (no data-theme / "dark-zinc") uses Tailwind's stock zinc + violet.
 
-  /* Accent text/icons sit on light backgrounds now — the -400 shades are too pale,
-     so darken them to their -600 values for readable contrast. Backgrounds that use
-     these with low opacity (bg-X-400/10, border-X-400/30) just become crisper tints. */
-  --color-violet-400:  #7c3aed;
-  --color-blue-400:    #2563eb;
-  --color-emerald-400: #059669;
-  --color-amber-400:   #d97706;
-  --color-rose-400:    #e11d48;
-  --color-cyan-400:    #0891b2;
-  --color-orange-400:  #ea580c;
-  --color-pink-400:    #db2777;
-}
+   Light themes invert the zinc ramp (zinc-N ⇄ zinc-(1000−N)) so bg-zinc-950 is the
+   lightest and text-zinc-100 is dark; accents drop to readable -600/-700 shades.
+   ──────────────────────────────────────────────────────────────────────────── */
 
-html.light body {
-  background-color: #fafafa;
-  color: #18181b;
+/* Claro · Papel — neutro */
+html[data-theme="light-paper"] {
+  --color-zinc-50:  #09090b; --color-zinc-100: #18181b; --color-zinc-200: #27272a;
+  --color-zinc-300: #3f3f46; --color-zinc-400: #52525b; --color-zinc-500: #71717a;
+  --color-zinc-600: #a1a1aa; --color-zinc-700: #d4d4d8; --color-zinc-800: #e4e4e7;
+  --color-zinc-900: #f4f4f5; --color-zinc-950: #fafafa;
+  --color-violet-400: #7c3aed; --color-blue-400: #2563eb; --color-emerald-400: #059669;
+  --color-amber-400: #d97706; --color-rose-400: #e11d48; --color-cyan-400: #0891b2;
+  --color-orange-400: #ea580c; --color-pink-400: #db2777;
+  /* shades usados como TEXTO no editor (code, destaque de busca) */
+  --color-violet-300: #6d28d9; --color-amber-200: #78350f;
 }
+html[data-theme="light-paper"] body { background-color: #fafafa; color: #18181b; }
+html[data-theme="light-paper"] ::-webkit-scrollbar-thumb { background: #c4c4c8; }
+html[data-theme="light-paper"] .lore-entity { color: #6d28d9; border-bottom-color: #6d28d9; }
+html[data-theme="light-paper"] .anim-glow.is-typing { color: #18181b; text-shadow: 0 0 8px rgba(124, 58, 237, 0.35); }
 
-html.light ::-webkit-scrollbar-thumb {
-  background: #c4c4c8;
+/* Claro · Sépia — pergaminho quente */
+html[data-theme="light-sepia"] {
+  --color-zinc-50:  #211a12; --color-zinc-100: #2e251b; --color-zinc-200: #3f3326;
+  --color-zinc-300: #5a4836; --color-zinc-400: #6e5a40; --color-zinc-500: #8a7355;
+  --color-zinc-600: #a89372; --color-zinc-700: #d8c9a8; --color-zinc-800: #e7dcc2;
+  --color-zinc-900: #efe6d0; --color-zinc-950: #f4ecd8;
+  --color-violet-400: #b45309; --color-blue-400: #1d4ed8; --color-emerald-400: #047857;
+  --color-amber-400: #b45309; --color-rose-400: #be123c; --color-cyan-400: #0e7490;
+  --color-orange-400: #c2410c; --color-pink-400: #be185d;
+  --color-violet-300: #9a3412; --color-amber-200: #78350f;
+  /* botões/seleção primários (bg-violet-500/600) → tom quente coeso */
+  --color-violet-500: #b45309; --color-violet-600: #9a3412;
 }
+html[data-theme="light-sepia"] body { background-color: #f4ecd8; color: #2e251b; }
+html[data-theme="light-sepia"] ::-webkit-scrollbar-thumb { background: #cdba98; }
+html[data-theme="light-sepia"] .lore-entity { color: #9a3412; border-bottom-color: #9a3412; }
+html[data-theme="light-sepia"] .anim-glow.is-typing { color: #2e251b; text-shadow: 0 0 8px rgba(180, 83, 9, 0.35); }
 
-/* Lore mention: violet-400 (#818cf8) is too faint on white → use a darker violet */
-html.light .lore-entity {
-  color: #6d28d9;
-  border-bottom-color: #6d28d9;
+/* Escuro · Âmbar — escuro quente */
+html[data-theme="dark-sepia"] {
+  --color-zinc-50:  #faf3e8; --color-zinc-100: #f0e6d6; --color-zinc-200: #d8c9b3;
+  --color-zinc-300: #b3a189; --color-zinc-400: #8a7860; --color-zinc-500: #6b5a44;
+  --color-zinc-600: #4d3f2e; --color-zinc-700: #3a2f22; --color-zinc-800: #2b2218;
+  --color-zinc-900: #211a14; --color-zinc-950: #17110c;
+  --color-violet-400: #f59e0b; --color-violet-300: #fcd34d;
+  --color-violet-500: #d97706; --color-violet-600: #b45309;
 }
-
-/* Soften the typing glow on a light background */
-html.light .anim-glow.is-typing {
-  color: #18181b;
-  text-shadow: 0 0 8px rgba(124, 58, 237, 0.35);
-}
+html[data-theme="dark-sepia"] body { background-color: #17110c; color: #f0e6d6; }
+html[data-theme="dark-sepia"] ::-webkit-scrollbar-thumb { background: #3a2f22; }
+html[data-theme="dark-sepia"] .lore-entity { color: #fbbf24; border-bottom-color: #fbbf24; }
+html[data-theme="dark-sepia"] .anim-glow.is-typing { color: #f0e6d6; text-shadow: 0 0 8px rgba(245, 158, 11, 0.55); }
 
 @layer base {
   * {

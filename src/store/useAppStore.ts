@@ -110,6 +110,10 @@ interface AppState {
   setTypewriterMode: (v: boolean) => void
   setTypewriterFocusRatio: (v: number) => void
 
+  // Google Drive
+  autoBackup: boolean
+  setAutoBackup: (v: boolean) => void
+
   // Save status
   saveStatus: 'idle' | 'saving' | 'saved'
   setSaveStatus: (s: 'idle' | 'saving' | 'saved') => void
@@ -131,6 +135,7 @@ interface AppState {
     typingAnimation?: TypingAnimation
     typewriterMode?: boolean
     typewriterFocusRatio?: number
+    autoBackup?: boolean
   }) => void
 
   // Actions — modes
@@ -265,6 +270,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   setTypewriterMode: (v) => set({ typewriterMode: v }),
   setTypewriterFocusRatio: (v) => set({ typewriterFocusRatio: v }),
 
+  autoBackup: false,
+  setAutoBackup: (v) => set({ autoBackup: v }),
+
   saveStatus: 'idle',
   setSaveStatus: (s) => set({ saveStatus: s }),
 
@@ -290,6 +298,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       ...(data.editorTextAlign ? { editorTextAlign: data.editorTextAlign } : {}),
       ...(data.typewriterMode  !== undefined ? { typewriterMode: data.typewriterMode } : {}),
       ...(data.typewriterFocusRatio !== undefined ? { typewriterFocusRatio: data.typewriterFocusRatio } : {}),
+      ...(data.autoBackup      !== undefined ? { autoBackup: data.autoBackup } : {}),
       activeChapterId: activeId,
       activeWordCount: activeId ? countWords(contents[activeId] ?? '') : 0,
       totalWordCount: Object.values(contents).reduce((s, t) => s + countWords(t), 0),

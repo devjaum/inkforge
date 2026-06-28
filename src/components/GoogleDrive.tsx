@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { X, Cloud, CloudUpload, CloudDownload, Check, AlertCircle, LogOut, Loader2, ExternalLink } from 'lucide-react'
+import { useAppStore } from '@/store/useAppStore'
 
 interface AuthStatus { hasCredentials: boolean; connected: boolean; email?: string }
 
@@ -13,6 +14,8 @@ export function GoogleDriveModal({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const [showCredForm, setShowCredForm] = useState(false)
+  const autoBackup = useAppStore(s => s.autoBackup)
+  const setAutoBackup = useAppStore(s => s.setAutoBackup)
 
   const refresh = async () => {
     const s = await api()?.gdriveStatus?.()
@@ -112,6 +115,19 @@ export function GoogleDriveModal({ onClose }: { onClose: () => void }) {
                   </button>
                 </div>
                 <p className="text-[10px] text-amber-400/80">Carregar do Drive substitui os dados locais atuais.</p>
+
+                {/* Backup automático */}
+                <button
+                  onClick={() => setAutoBackup(!autoBackup)}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800/60 hover:bg-zinc-800 transition-colors"
+                >
+                  <span className={`relative w-8 h-4.5 rounded-full transition-colors shrink-0 ${autoBackup ? 'bg-violet-600' : 'bg-zinc-600'}`} style={{ height: '18px', width: '32px' }}>
+                    <span className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white transition-transform ${autoBackup ? 'translate-x-[14px]' : ''}`} />
+                  </span>
+                  <span className="text-xs text-zinc-200 text-left flex-1">Backup automático ao salvar</span>
+                </button>
+                <p className="text-[10px] text-zinc-600 -mt-1">Sobe para o Drive em segundo plano alguns segundos após cada alteração.</p>
+
                 <button onClick={disconnect} disabled={!!busy}
                   className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] text-zinc-500 hover:text-zinc-300">
                   <LogOut size={11} /> Desconectar

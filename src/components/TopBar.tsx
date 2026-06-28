@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown, BookDown, RefreshCw, Sun, Moon, Cloud } from 'lucide-react'
+import { Timer, Zap, BookOpen, Inbox, Focus, Maximize2, BellOff, Bell, Target, Search, FolderDown, BookDown, RefreshCw, Palette, Check, Cloud } from 'lucide-react'
 import { Progress } from './ui/progress'
 import { useAppStore } from '@/store/useAppStore'
 import { ExportImportModal } from './ExportImport'
 import { ExportBook } from './ExportBook'
 import { GoogleDriveModal } from './GoogleDrive'
 import { CHECK_UPDATES_EVENT } from './UpdateNotifier'
+import type { ThemeDef } from '@/hooks/useTheme'
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0')
@@ -15,11 +16,12 @@ function formatTime(seconds: number): string {
 
 interface TopBarProps {
   onOpenSearch: () => void
-  isDark: boolean
-  onToggleTheme: () => void
+  theme: string
+  themes: ThemeDef[]
+  setTheme: (id: string) => void
 }
 
-export function TopBar({ onOpenSearch, isDark, onToggleTheme }: TopBarProps) {
+export function TopBar({ onOpenSearch, theme, themes, setTheme }: TopBarProps) {
   const {
     isFocusMode, isZenMode, isSprintActive, sprintSeconds,
     level, xpProgress, activeWordCount, todayWordCount, dailyGoalWords, showLevelUp, silentMode,
@@ -33,6 +35,7 @@ export function TopBar({ onOpenSearch, isDark, onToggleTheme }: TopBarProps) {
   const [showExportImport, setShowExportImport] = useState(false)
   const [showExportBook,   setShowExportBook]   = useState(false)
   const [showGoogleDrive,  setShowGoogleDrive]  = useState(false)
+  const [showThemeMenu,    setShowThemeMenu]    = useState(false)
 
   useEffect(() => {
     if (isSprintActive) {
@@ -203,14 +206,38 @@ export function TopBar({ onOpenSearch, isDark, onToggleTheme }: TopBarProps) {
         <RefreshCw size={13} />
       </button>
 
-      {/* Theme toggle */}
-      <button
-        onClick={onToggleTheme}
-        className="no-drag p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
-        title={isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
-      >
-        {isDark ? <Sun size={13} /> : <Moon size={13} />}
-      </button>
+      {/* Theme selector */}
+      <div className="no-drag relative">
+        <button
+          onClick={() => setShowThemeMenu(v => !v)}
+          className={`p-1.5 rounded-lg transition-colors ${showThemeMenu ? 'text-violet-400 bg-violet-400/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'}`}
+          title="Tema"
+        >
+          <Palette size={13} />
+        </button>
+        {showThemeMenu && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowThemeMenu(false)} />
+            <div className="absolute top-full right-0 mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-1.5 w-48">
+              <div className="px-2 py-1 text-[10px] text-zinc-500 uppercase tracking-wider">Tema</div>
+              {themes.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => { setTheme(t.id); setShowThemeMenu(false) }}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors ${theme === t.id ? 'bg-zinc-800' : 'hover:bg-zinc-800/60'}`}
+                >
+                  <span className="flex shrink-0 rounded-md overflow-hidden border border-zinc-700">
+                    <span className="w-3 h-4 block" style={{ background: t.swatch[0] }} />
+                    <span className="w-3 h-4 block" style={{ background: t.swatch[1] }} />
+                  </span>
+                  <span className="text-xs text-zinc-200 flex-1">{t.label}</span>
+                  {theme === t.id && <Check size={12} className="text-violet-400" />}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Silent mode */}
       <button

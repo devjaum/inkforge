@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useAppStore } from '@/store/useAppStore'
 
 const SAVE_DEBOUNCE = 1500
+const DRIVE_DEBOUNCE = 8000
 
 async function readJson(file: string): Promise<unknown> {
   try { return await window.electronAPI?.readJson(file) ?? null } catch { return null }
@@ -16,7 +17,7 @@ export function usePersistence() {
     chapters, chapterContents, chapterHistory, loreEntities, loreTypes,
     dailyGoalWords, todayWordCount, typingAnimation,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
-    typewriterMode, typewriterFocusRatio,
+    typewriterMode, typewriterFocusRatio, autoBackup,
     hydrate, setSaveStatus, recordSnapshot,
   } = useAppStore()
 
@@ -25,13 +26,13 @@ export function usePersistence() {
     chapters, chapterContents, chapterHistory, loreEntities, loreTypes,
     dailyGoalWords, todayWordCount, typingAnimation,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
-    typewriterMode, typewriterFocusRatio,
+    typewriterMode, typewriterFocusRatio, autoBackup,
   })
   latestRef.current = {
     chapters, chapterContents, chapterHistory, loreEntities, loreTypes,
     dailyGoalWords, todayWordCount, typingAnimation,
     editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
-    typewriterMode, typewriterFocusRatio,
+    typewriterMode, typewriterFocusRatio, autoBackup,
   }
 
   // ── Load on mount ────────────────────────────────────────────────────────────
@@ -54,6 +55,7 @@ export function usePersistence() {
         editorMaxWidth?: number; editorFontSize?: number; editorLineHeight?: number; editorTextAlign?: 'left' | 'justify'
         typingAnimation?: Parameters<typeof hydrate>[0]['typingAnimation']
         typewriterMode?: boolean; typewriterFocusRatio?: number
+        autoBackup?: boolean
       } | null
 
       if (!content && !chaps && !lore && !progress && !history) return
@@ -75,6 +77,7 @@ export function usePersistence() {
         typingAnimation:      progress?.typingAnimation,
         typewriterMode:       progress?.typewriterMode,
         typewriterFocusRatio: progress?.typewriterFocusRatio,
+        autoBackup:           progress?.autoBackup,
       })
     }
     load()
@@ -118,10 +121,33 @@ export function usePersistence() {
     schedule('progress', () => writeJson('progress.json', {
       dailyGoalWords, todayWordCount, typingAnimation,
       editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign,
-      typewriterMode, typewriterFocusRatio,
+      typewriterMode, typewriterFocusRatio, autoBackup,
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dailyGoalWords, todayWordCount, typingAnimation, editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, typewriterMode, typewriterFocusRatio])
+  }, [dailyGoalWords, todayWordCount, typingAnimation, editorMaxWidth, editorFontSize, editorLineHeight, editorTextAlign, typewriterMode, typewriterFocusRatio, autoBackup])
+
+  // ── Backup automático no Google Drive (debounced) ────────────────────────────
+  useEffect(() => {
+    if (!autoBackup) return
+    if (timers.current.drive) clearTimeout(timers.current.drive)
+    timers.current.drive = setTimeout(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const api = (window as any).electronAPI
+      if (!api?.gdriveBackup || !api?.gdriveStatus) return
+      const st = await api.gdriveStatus().catch(() => null)
+      if (!st?.connected) return
+      const emit = (detail: Record<string, unknown>) =>
+        window.dispatchEvent(new CustomEvent('inkforge:drive-sync', { detail }))
+      emit({ state: 'syncing' })
+      try {
+        const r = await api.gdriveBackup()
+        emit({ state: 'done', count: r?.uploaded?.length ?? 0 })
+      } catch (e) {
+        emit({ state: 'error', message: e instanceof Error ? e.message : String(e) })
+      }
+    }, DRIVE_DEBOUNCE)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapterContents, chapters, loreEntities, loreTypes, chapterHistory, dailyGoalWords, todayWordCount, autoBackup])
 
   // ── Ctrl+S — save all immediately ───────────────────────────────────────────
   useEffect(() => {
@@ -145,6 +171,7 @@ export function usePersistence() {
           editorMaxWidth: d.editorMaxWidth, editorFontSize: d.editorFontSize,
           editorLineHeight: d.editorLineHeight, editorTextAlign: d.editorTextAlign,
           typewriterMode: d.typewriterMode, typewriterFocusRatio: d.typewriterFocusRatio,
+          autoBackup: d.autoBackup,
         }),
       ])
       setSaveStatus('saved')

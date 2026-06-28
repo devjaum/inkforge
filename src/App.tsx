@@ -9,6 +9,7 @@ import { OmniSearch } from './components/OmniSearch'
 import { GlobalSearch } from './components/GlobalSearch'
 import { SaveIndicator } from './components/SaveIndicator'
 import { UpdateNotifier } from './components/UpdateNotifier'
+import { DriveSyncToast } from './components/DriveSyncToast'
 import { CaptureWindow } from './pages/CaptureWindow'
 import { usePersistence } from './hooks/usePersistence'
 import './index.css'
@@ -21,7 +22,7 @@ export default function App() {
   const { isFocusMode, isZenMode, toggleFocusMode, toggleZenMode } = useAppStore()
   const [omniOpen, setOmniOpen]         = useState(false)
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
-  const { isDark, toggleTheme } = useTheme()
+  const { theme, setTheme, themes } = useTheme()
 
   usePersistence()
 
@@ -64,6 +65,7 @@ export default function App() {
         <LevelUpToast />
         <SaveIndicator />
         <UpdateNotifier />
+        <DriveSyncToast />
         <OmniSearch open={omniOpen} onClose={() => setOmniOpen(false)} />
       <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
       </div>
@@ -72,7 +74,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100 overflow-hidden">
-      <TopBar onOpenSearch={() => setOmniOpen(true)} isDark={isDark} onToggleTheme={toggleTheme} />
+      <TopBar onOpenSearch={() => setOmniOpen(true)} theme={theme} themes={themes} setTheme={setTheme} />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div className={`sidebar-transition overflow-hidden shrink-0 ${isFocusMode ? 'w-0 opacity-0 pointer-events-none' : 'w-56 opacity-100'}`}>
@@ -87,6 +89,7 @@ export default function App() {
       <LevelUpToast />
       <SaveIndicator />
       <UpdateNotifier />
+      <DriveSyncToast />
       <OmniSearch open={omniOpen} onClose={() => setOmniOpen(false)} />
       <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
     </div>
