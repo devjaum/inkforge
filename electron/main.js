@@ -116,8 +116,10 @@ electron_1.ipcMain.handle('write-json', (_e, filename, data) => { writeJson(file
 electron_1.ipcMain.handle('close-capture', () => captureWindow?.close());
 electron_1.ipcMain.handle('open-external', (_e, url) => electron_1.shell.openExternal(url));
 electron_1.ipcMain.handle('show-window', () => { mainWindow?.show(); mainWindow?.focus(); });
-electron_1.ipcMain.handle('set-titlebar-theme', (_e, theme) => {
-    mainWindow?.setTitleBarOverlay({ ...TITLEBAR_THEME[theme === 'light' ? 'light' : 'dark'], height: 48 });
+electron_1.ipcMain.handle('set-titlebar-theme', (_e, overlay) => {
+    if (!overlay?.color || !overlay?.symbolColor)
+        return;
+    mainWindow?.setTitleBarOverlay({ color: overlay.color, symbolColor: overlay.symbolColor, height: 48 });
 });
 electron_1.ipcMain.handle('export-pdf', (_e, book) => (0, export_1.exportPdf)(book));
 electron_1.ipcMain.handle('export-epub', (_e, book) => (0, export_1.exportEpub)(book));

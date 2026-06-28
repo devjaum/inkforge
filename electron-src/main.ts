@@ -123,8 +123,9 @@ ipcMain.handle('write-json',    (_e, filename: string, data: unknown) => { write
 ipcMain.handle('close-capture', () => captureWindow?.close())
 ipcMain.handle('open-external', (_e, url: string) => shell.openExternal(url))
 ipcMain.handle('show-window',   () => { mainWindow?.show(); mainWindow?.focus() })
-ipcMain.handle('set-titlebar-theme', (_e, theme: 'light' | 'dark') => {
-  mainWindow?.setTitleBarOverlay({ ...TITLEBAR_THEME[theme === 'light' ? 'light' : 'dark'], height: 48 })
+ipcMain.handle('set-titlebar-theme', (_e, overlay: { color: string; symbolColor: string }) => {
+  if (!overlay?.color || !overlay?.symbolColor) return
+  mainWindow?.setTitleBarOverlay({ color: overlay.color, symbolColor: overlay.symbolColor, height: 48 })
 })
 ipcMain.handle('export-pdf',    (_e, book: BookData) => exportPdf(book))
 ipcMain.handle('export-epub',   (_e, book: BookData) => exportEpub(book))

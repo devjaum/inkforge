@@ -6,13 +6,15 @@ export interface ThemeDef {
   dark: boolean
   /** [bg, accent] usados como amostra (swatch) no seletor */
   swatch: [string, string]
+  /** cores dos controles da janela (min/max/fechar) — casam com a barra superior */
+  titlebar: { color: string; symbolColor: string }
 }
 
 export const THEMES: ThemeDef[] = [
-  { id: 'dark-zinc',   label: 'Escuro · Zinc',  dark: true,  swatch: ['#18181b', '#a78bfa'] },
-  { id: 'dark-sepia',  label: 'Escuro · Âmbar', dark: true,  swatch: ['#1c1510', '#f59e0b'] },
-  { id: 'light-paper', label: 'Claro · Papel',  dark: false, swatch: ['#fafafa', '#7c3aed'] },
-  { id: 'light-sepia', label: 'Claro · Sépia',  dark: false, swatch: ['#f4ecd8', '#b45309'] },
+  { id: 'dark-zinc',   label: 'Escuro · Zinc',  dark: true,  swatch: ['#18181b', '#a78bfa'], titlebar: { color: '#09090b', symbolColor: '#a1a1aa' } },
+  { id: 'dark-sepia',  label: 'Escuro · Âmbar', dark: true,  swatch: ['#1c1510', '#f59e0b'], titlebar: { color: '#17110c', symbolColor: '#b3a189' } },
+  { id: 'light-paper', label: 'Claro · Papel',  dark: false, swatch: ['#fafafa', '#7c3aed'], titlebar: { color: '#fafafa', symbolColor: '#52525b' } },
+  { id: 'light-sepia', label: 'Claro · Sépia',  dark: false, swatch: ['#f4ecd8', '#b45309'], titlebar: { color: '#f4ecd8', symbolColor: '#6e5a40' } },
 ]
 
 const DEFAULT_THEME = 'dark-zinc'
@@ -34,8 +36,8 @@ export function useTheme() {
     root.classList.toggle('dark', def.dark)
     root.classList.toggle('light', !def.dark)
     localStorage.setItem('inkforge-theme', def.id)
-    // Sincroniza os controles da janela do Electron com o tom do tema.
-    window.electronAPI?.setTitleBarTheme?.(def.dark ? 'dark' : 'light')
+    // Sincroniza os controles da janela do Electron com a paleta do tema.
+    window.electronAPI?.setTitleBarTheme?.(def.titlebar)
   }, [theme])
 
   const current = THEMES.find(t => t.id === theme) ?? THEMES[0]

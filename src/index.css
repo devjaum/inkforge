@@ -20,6 +20,10 @@ html[data-theme="light-paper"] {
   --color-orange-400: #ea580c; --color-pink-400: #db2777;
   /* shades usados como TEXTO no editor (code, destaque de busca) */
   --color-violet-300: #6d28d9; --color-amber-200: #78350f;
+  /* -300 usados como TEXTO nas tags da Lore (text-X-300 sobre bg-X-500/20) */
+  --color-blue-300: #1d4ed8; --color-emerald-300: #047857; --color-amber-300: #b45309;
+  --color-rose-300: #be123c; --color-cyan-300: #0e7490; --color-orange-300: #c2410c;
+  --color-pink-300: #be185d;
 }
 html[data-theme="light-paper"] body { background-color: #fafafa; color: #18181b; }
 html[data-theme="light-paper"] ::-webkit-scrollbar-thumb { background: #c4c4c8; }
@@ -38,6 +42,10 @@ html[data-theme="light-sepia"] {
   --color-violet-300: #9a3412; --color-amber-200: #78350f;
   /* botões/seleção primários (bg-violet-500/600) → tom quente coeso */
   --color-violet-500: #b45309; --color-violet-600: #9a3412;
+  /* -300 usados como TEXTO nas tags da Lore */
+  --color-blue-300: #1d4ed8; --color-emerald-300: #047857; --color-amber-300: #b45309;
+  --color-rose-300: #be123c; --color-cyan-300: #0e7490; --color-orange-300: #c2410c;
+  --color-pink-300: #be185d;
 }
 html[data-theme="light-sepia"] body { background-color: #f4ecd8; color: #2e251b; }
 html[data-theme="light-sepia"] ::-webkit-scrollbar-thumb { background: #cdba98; }
