@@ -3,6 +3,18 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 const { execSync } = require('child_process');
 const path = require('path');
 
+// Assinatura de código (Windows) — opcional. Só assina quando WINDOWS_CERT_FILE
+// estiver definido; caso contrário, o build sai normalmente sem assinatura.
+// Use com um certificado confiável (Azure Trusted Signing / EV / SignPath) para
+// remover o aviso do SmartScreen / Controle inteligente de aplicativos.
+const windowsSign = process.env.WINDOWS_CERT_FILE
+  ? {
+      certificateFile: process.env.WINDOWS_CERT_FILE,
+      certificatePassword: process.env.WINDOWS_CERT_PASSWORD,
+      timestampServer: process.env.WINDOWS_TIMESTAMP_SERVER || 'http://timestamp.digicert.com',
+    }
+  : undefined;
+
 module.exports = {
   packagerConfig: {
     asar: true,
@@ -16,6 +28,7 @@ module.exports = {
     download: {
       unsafelyDisableChecksums: true,
     },
+    ...(windowsSign ? { windowsSign } : {}),
     ignore: [
       /^\/electron-src/,
       /^\/src/,
@@ -53,6 +66,7 @@ module.exports = {
         description: 'InkForge — editor para escritores criativos',
         setupIcon: path.join(__dirname, 'build', 'icon.ico'),
         iconUrl: `file:///${path.join(__dirname, 'build', 'icon.ico').replace(/\\/g, '/')}`,
+        ...(windowsSign ? { windowsSign } : {}),
       },
     },
     {
